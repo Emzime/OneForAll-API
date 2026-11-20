@@ -31,7 +31,7 @@ jobs:
       - name: Check Lua syntax
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq lua5.1 > /dev/null
-          find OneForAll -name '*.lua' -print0 | xargs -0 -n 50 luac5.1 -p
+          find OneForAll examples -name '*.lua' -print0 | xargs -0 -n 50 luac5.1 -p
 
       - name: Package
         run: |

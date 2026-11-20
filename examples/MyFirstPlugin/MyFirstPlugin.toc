@@ -1,0 +1,10 @@
+## Interface: 16001
+## Title: OneForAll - My First Plugin
+## Notes: Example plugin for OneForAll: the dungeons for your level, in the chat and on the Plugins page.
+## Author: Your name
+## X-License: GPL-3.0-or-later
+## Version: 1.0.0
+## IconTexture: Interface\Icons\INV_Misc_Book_09
+## Dependencies: OneForAll
+
+MyFirstPlugin.lua

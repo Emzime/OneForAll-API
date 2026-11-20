@@ -12,6 +12,15 @@ Plugins are separate addons. They can read everything OneForAll knows and add th
 
 The `-api1` suffix marks a test build for OneForAll's version check: it never tells other players about a "newer version", and you are still told when the official 6.2.13 / 6.3.0 comes out. Screenshots were taken in game with a French client.
 
+## Documentation
+
+| Page | For |
+|---|---|
+| [User guide](docs/user-guide.md) | Players: installing plugins, the Plugins page, turning plugins on or off, troubleshooting. |
+| [Plugin guide](docs/plugin-guide.md) | Plugin authors: a step-by-step guide, from an empty folder to a published plugin. |
+| [API reference](docs/api-reference.md) | Plugin authors: every function, with its arguments, what it returns and since which version. |
+| [`examples/MyFirstPlugin`](examples/MyFirstPlugin) | A small, complete plugin to copy and start from. |
+
 ## Plugins
 
 | Plugin | What it does |
@@ -106,7 +115,7 @@ API.RegisterCallback("TAB_SHOWN", function(key) API.Print("Page: " .. key) end)
 | **Callbacks** | `RegisterCallback(event, fn)`, `UnregisterCallback(event, fn)`. Events: `OPTION_CHANGED`, `TAB_SHOWN`, `WINDOW_SHOWN`, `WINDOW_HIDDEN`, `DATA_REFRESHED` |
 | **Widgets** | `Widgets.FramedPanel`, `CloseButton`, `GoldButton`, `Confirm`, `FontString`, `SetTexture`, `SkinColor` |
 
-Every function is described in the comments of [`OneForAll/API.lua`](OneForAll/API.lua). Something a plugin needs and can't do yet becomes a new function in a later version (`VERSION` 4…), never a change to an existing one.
+Every function is described in the [API reference](docs/api-reference.md) and in the comments of [`OneForAll/API.lua`](OneForAll/API.lua). Something a plugin needs and can't do yet becomes a new function in a later version (`VERSION` 4…), never a change to an existing one.
 
 ---
 
