@@ -527,24 +527,25 @@ local function installedPlugins()
   local getInfo = (C_AddOns and C_AddOns.GetAddOnInfo) or GetAddOnInfo
   local getDeps = (C_AddOns and C_AddOns.GetAddOnDependencies) or GetAddOnDependencies
   local isLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
-  local enableState = (C_AddOns and C_AddOns.GetAddOnEnableState) or GetAddOnEnableState
   for i = 1, num do
-    local name = getInfo and getInfo(i)
+    local name, _, _, loadable, reason
+    if getInfo then name, _, _, loadable, reason = getInfo(i) end
     local deps = getDeps and { getDeps(i) } or {}
     local ours = false
     for _, d in ipairs(deps) do if d == ADDON then ours = true end end
     if type(name) == "string" and ours then
       seen[name] = true
-      local state = 0
-      if enableState then
-        local ok, st = pcall(enableState, name, UnitName and UnitName("player"))
-        if not ok then ok, st = pcall(enableState, UnitName and UnitName("player"), name) end -- older order
-        state = ok and tonumber(st) or 0
-      end
+      local loaded = isLoaded and isLoaded(name) and true or false
+      -- on or off for the next load, as the game's AddOns list shows it: GetAddOnInfo's reason is "DISABLED" for an
+      -- addon turned off (GetAddOnEnableState isn't reliable here: its arguments differ between clients)
+      local enabled
+      if reason == "DISABLED" then enabled = false
+      elseif loadable ~= nil or reason ~= nil then enabled = true
+      else enabled = loaded end
       list[#list + 1] = { name = name, title = plugins[name] and plugins[name].title or (meta(name, "Title") or name),
         version = plugins[name] and plugins[name].version or meta(name, "Version") or "?",
         notes = meta(name, "Notes"), author = meta(name, "Author"),
-        loaded = isLoaded and isLoaded(name) and true or false, enabled = state > 0 }
+        loaded = loaded, enabled = enabled }
     end
   end
   -- registered without a dependency line (should not happen): listed too

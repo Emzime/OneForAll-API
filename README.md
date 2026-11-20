@@ -8,7 +8,7 @@ Plugins are separate addons. They can read everything OneForAll knows and add th
 
 | Folder | What it is | Version |
 |---|---|---|
-| `OneForAll/` | OneForAll **6.2.12** + the plugin API | `6.2.12-api1` |
+| `OneForAll/` | OneForAll **6.2.12** + the plugin API | `6.2.12-api2` |
 
 The `-api1` suffix marks a test build for OneForAll's version check: it never tells other players about a "newer version", and you are still told when the official 6.2.13 / 6.3.0 comes out. Screenshots were taken in game with a French client.
 
@@ -37,7 +37,7 @@ Very little, so it's easy to take over in each new version:
 |---|---|
 | `API.lua` | **New.** The whole API (the global `OneForAllAPI`, thin wrappers over OneForAll's own functions) and the Plugins page. |
 | `UI/MainFrame.lua` | A page can have a button in the title bar instead of a tab (`noTab`): the tab bar is already full in French or German. The Plugins page uses it. |
-| `OneForAll.toc` | Loads `API.lua` last. Version `6.2.12-api1`. |
+| `OneForAll.toc` | Loads `API.lua` last. Version `6.2.12-api2`. |
 | `Core.lua` | `/ofa <word>` hands a plugin its command (5 lines before the `else` that opens the window). |
 | `UI/Settings.lua` | Not for the API: the fix for long labels (see below). |
 | `Locales/{deDE,frFR,esES,ptBR}.lua` | The texts of the Plugins page (11). |
@@ -140,9 +140,9 @@ In languages with long labels (French, German…), the switches in the *Dungeons
 
 `.github/workflows/build.yml` checks every Lua file and builds `OneForAll-<version>.zip`:
 - on every push and pull request, as a workflow artifact;
-- when a tag starting with `v` is pushed (e.g. `git tag v6.2.12-api1 && git push --tags`), also as a GitHub release.
+- when a tag starting with `v` is pushed (e.g. `git tag v6.2.12-api2 && git push --tags`), also as a GitHub release.
 
-For a new build, raise the suffix in `OneForAll/OneForAll.toc` (`## Version: 6.2.12-api2`) and tag it the same way (`v6.2.12-api2`). Keep tags in lower case: GitHub sorts releases by comparing tag names.
+For a new build, raise the suffix in `OneForAll/OneForAll.toc` (`## Version: 6.2.12-api3`) and tag it the same way (`v6.2.12-api3`). Keep tags in lower case: GitHub sorts releases by comparing tag names.
 
 ## Credits & license
 

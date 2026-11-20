@@ -66,7 +66,7 @@ What a view does:
 | Function | Returns | Since |
 |---|---|---|
 | `API.VERSION` | The API's version (number). | 2 |
-| `API.GetVersion()` | OneForAll's version from its `.toc`, e.g. `"6.2.12-api1"`. | 2 |
+| `API.GetVersion()` | OneForAll's version from its `.toc`, e.g. `"6.2.12-api2"`. | 2 |
 | `API.GetLanguage()` | The language chosen in OneForAll: `"enUS"`, `"deDE"`, `"frFR"`, `"esES"` or `"ptBR"`. Changing it reloads the interface. | 2 |
 | `API.Translate(text)` | OneForAll's translation of an English text, or the text itself. | 2 |
 | `API.Name(englishName)` | A boss, NPC, item, quest or zone name in the chosen language when OneForAll knows it, else the English name. | 2 |
