@@ -25,7 +25,7 @@ The `-api1` suffix marks a test build for OneForAll's version check: it never te
 
 | Plugin | What it does |
 |---|---|
-| [Dungeon Tracker](https://github.com/Emzime/Plugin-DungeonTracker-OneForAll) | Killed bosses, time, XP and gold while you're in a dungeon or raid. |
+| [Dungeon Tracker](https://github.com/Emzime/OneForAll-Plugin-DungeonTracker) | Killed bosses, time, XP and gold while you're in a dungeon or raid. |
 
 ---
 
@@ -57,7 +57,7 @@ As soon as a plugin is installed, a **Plugins** button (gears) appears in OneFor
   This side scrolls with the mouse wheel too, without a visible bar.
 
 <p align="center"><img src="docs/images/plugins-page.png" width="700" alt="The Plugins page with the Dungeon Tracker"></p>
-<p align="center"><sub>The Plugins page (gears button, top right) with the <a href="https://github.com/Emzime/Plugin-DungeonTracker-OneForAll">Dungeon Tracker</a> plugin chosen (French client).</sub></p>
+<p align="center"><sub>The Plugins page (gears button, top right) with the <a href="https://github.com/Emzime/OneForAll-Plugin-DungeonTracker">Dungeon Tracker</a> plugin chosen (French client).</sub></p>
 
 ## Plugins read everything, change nothing
 

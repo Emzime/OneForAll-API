@@ -294,7 +294,7 @@ Give your frames names that start with your plugin's name (`MyPluginFrame`), so 
 - Zip **the plugin's folder** (not its contents): the player puts it into `Interface/AddOns`.
 - Say clearly that it needs **OneForAll with the plugin API**, with a link to it.
 - Give the version in the `.toc`. Players see it on the Plugins page.
-- On GitHub, a workflow can build the zip and attach it to a release on each tag. The [Dungeon Tracker](https://github.com/Emzime/Plugin-DungeonTracker-OneForAll) repository has one (`.github/workflows/build.yml`) that you can copy.
+- On GitHub, a workflow can build the zip and attach it to a release on each tag. The [Dungeon Tracker](https://github.com/Emzime/OneForAll-Plugin-DungeonTracker) repository has one (`.github/workflows/build.yml`) that you can copy.
 - Licence: OneForAll is under GPL-3.0-or-later. Using the same licence for a plugin (as the Dungeon Tracker does) is the simplest choice. It is required for any part of OneForAll's code you copy into your plugin, rather than calling the API.
 
 ## 15. Checklist
