@@ -1,6 +1,6 @@
 -- MyFirstPlugin: a small, complete example of a OneForAll plugin.
 -- It lists the dungeons (and raids, if wanted) for a level, adds two settings and a summary block to the Plugins page,
--- and a /ofa dungeons command. Copy this folder, rename it (folder, .toc and the NAME below) and build from there.
+-- and an /ofa plugin_first command. Copy this folder, rename it (folder, .toc and the NAME below) and build from there.
 local NAME = "MyFirstPlugin" -- the addon's folder name: the plugin's name everywhere in the API
 
 -- 1. The API: present, and new enough for what this file uses ------------------------------------------------------
@@ -22,7 +22,7 @@ local T = {
     ["Summary"] = "Résumé",
     ["%d dungeons, %d raids in OneForAll."] = "%d donjons, %d raids dans OneForAll.",
     ["Library books: %d turned in, %d owned."] = "Livres de la bibliothèque : %d rendus, %d possédés.",
-    ["My First Plugin is ready: /ofa dungeons [level]."] = "My First Plugin est prêt : /ofa dungeons [niveau].",
+    ["My First Plugin is ready: /ofa plugin_first [level]."] = "My First Plugin est prêt : /ofa plugin_first [niveau].",
   },
 }
 local mine = T[API.GetLanguage()] or {}
@@ -60,9 +60,10 @@ local function printFor(level)
   end
 end
 
--- 5. A command: /ofa dungeons [level] -------------------------------------------------------------------------------
-API.RegisterSlashCommand("dungeons", function(rest) printFor(rest ~= "" and rest or nil) end,
-  "/ofa dungeons [level]: the dungeons for a level")
+-- 5. A command: /ofa plugin_myfirstplugin [level], or its alias /ofa plugin_first [level] ------------------------------
+-- (the word comes from the folder's name; every /ofa plugin_... word is the plugins', the others are OneForAll's)
+API.RegisterSlashCommand(NAME, function(rest) printFor(rest ~= "" and rest or nil) end,
+  "/ofa plugin_first [level]: the dungeons for a level", "first")
 
 -- 6. Settings on the Plugins page -----------------------------------------------------------------------------------
 API.AddSettingsSection(NAME, {
@@ -108,5 +109,5 @@ end)
 local ev = CreateFrame("Frame")
 ev:RegisterEvent("PLAYER_LOGIN")
 ev:SetScript("OnEvent", function()
-  if opts:Get("greet") then API.Print(L("My First Plugin is ready: /ofa dungeons [level].")) end
+  if opts:Get("greet") then API.Print(L("My First Plugin is ready: /ofa plugin_first [level].")) end
 end)

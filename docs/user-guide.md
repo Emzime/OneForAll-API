@@ -55,11 +55,11 @@ A plugin's options are saved in **OneForAll's profile** for the character, next 
 
 | Command | What it does |
 |---|---|
-| `/ofa plugins` | Lists the plugins that are loaded, with their version. |
+| `/ofa plugins` | Lists the plugins that are loaded, with their version and command. |
 | `/ofa errors` | OneForAll's error list, plugins' errors included. |
-| `/ofa <word>` | A plugin's command, if it has one (e.g. `/ofa run` for the Dungeon Tracker). See the plugin's own page. |
+| `/ofa plugin_<name>` | A plugin's command, if it has one: e.g. `/ofa plugin_dungeontracker`, or its short form `/ofa plugin_dt`. It is shown on the plugin's page. |
 
-OneForAll's own commands always come first: a plugin can't take one of them.
+Every `/ofa plugin_…` command belongs to a plugin, and every other `/ofa` command to OneForAll, so they never get in each other's way.
 
 ## Updating
 

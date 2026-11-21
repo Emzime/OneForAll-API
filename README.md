@@ -38,7 +38,7 @@ Very little, so it's easy to take over in each new version:
 | `API.lua` | **New.** The whole API (the global `OneForAllAPI`, thin wrappers over OneForAll's own functions) and the Plugins page. |
 | `UI/MainFrame.lua` | A page can have a button in the title bar instead of a tab (`noTab`): the tab bar is already full in French or German. The Plugins page uses it. |
 | `OneForAll.toc` | Loads `API.lua` last. Version `6.2.12-api1`. |
-| `Core.lua` | `/ofa <word>` hands a plugin its command (5 lines before the `else` that opens the window). |
+| `Core.lua` | `/ofa plugin_<name>` hands a plugin its command (5 lines before the `else` that opens the window). Every other `/ofa` word stays OneForAll's. |
 | `UI/Settings.lua` | Not for the API: the fix for long labels (see below). |
 | `Locales/{deDE,frFR,esES,ptBR}.lua` | The texts of the Plugins page (11). |
 
@@ -85,13 +85,13 @@ API.AddSettingsSection("MyPlugin", { title = "My Plugin", build = function(s)  -
     function(v) opts:Set("enabled", v) end)
 end })
 
-API.RegisterSlashCommand("bosses", function(rest)            -- /ofa bosses ragefire chasm
+API.RegisterSlashCommand("MyPlugin", function(rest)    -- /ofa plugin_myplugin ragefire chasm (or /ofa plugin_mp ...)
   for _, d in API.ipairs(API.Data.DUNGEONS) do
     if d.name:lower() == rest then
       API.Print(API.DungeonName(d.name) .. ": " .. API.Count(d.bosses) .. " bosses")
     end
   end
-end)
+end, "/ofa plugin_mp <dungeon>: the bosses of a dungeon", "mp")
 
 API.RegisterCallback("TAB_SHOWN", function(key) API.Print("Page: " .. key) end)
 ```
@@ -111,7 +111,7 @@ API.RegisterCallback("TAB_SHOWN", function(key) API.Print("Page: " .. key) end)
 | **Saved data (read only)** | `GetCharacterKey()`, `GetCharacterData()`, `GetAccountData()` |
 | **Options** | OneForAll's (read only): `GetOption(key)`, `OnOptionChanged(key, fn)`. The plugin's own: `NewOptions(name, defaults)` → `:Get(key)`, `:Set(key, value)`, `:OnChanged(key, fn)` |
 | **Plugins page** | `AddSettingsSection(name, { title, icon, build })`: a section of settings in the plugin's part of the page; `build(s)` uses `s:check`, `s:button`, `s:text`, `s:nextRow`, and `s.width` (the sections take the page's whole width). `AddPluginContent(name, { title, icon, height, build })`: a free block for anything else (a list, a summary…), `build(frame, width)` |
-| **Slash commands** | `RegisterSlashCommand(word, fn, help)`: `/ofa <word> [rest]` |
+| **Slash commands** | `RegisterSlashCommand(name, fn, help, alias)`: `/ofa plugin_<name> [rest]`, and `/ofa plugin_<alias> [rest]` |
 | **Callbacks** | `RegisterCallback(event, fn)`, `UnregisterCallback(event, fn)`. Events: `OPTION_CHANGED`, `TAB_SHOWN`, `WINDOW_SHOWN`, `WINDOW_HIDDEN`, `DATA_REFRESHED` |
 | **Widgets** | `Widgets.FramedPanel`, `CloseButton`, `GoldButton`, `Confirm`, `FontString`, `SetTexture`, `SkinColor` |
 

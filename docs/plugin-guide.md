@@ -185,13 +185,18 @@ API.AddPluginContent(NAME, {
 ## 7. Slash commands
 
 ```lua
-API.RegisterSlashCommand("bosses", function(rest)
-  -- /ofa bosses ragefire chasm  ->  rest = "ragefire chasm"
-end, "/ofa bosses <dungeon>: the bosses of a dungeon")
+API.RegisterSlashCommand(NAME, function(rest)
+  -- /ofa plugin_mybosses ragefire chasm  ->  rest = "ragefire chasm"
+  -- /ofa plugin_mb ragefire chasm        ->  the same, through the alias
+end, "/ofa plugin_mb <dungeon>: the bosses of a dungeon", "mb")
 ```
 
-- The player types `/ofa <word> [rest]`, and your function gets `rest` (`""` when there is nothing after the word).
-- OneForAll's own commands always come first. A word another plugin already took stays with it, and `RegisterSlashCommand` then returns `false`. Choose a word specific to your plugin.
+- **Every `/ofa plugin_…` word belongs to the plugins; every other `/ofa` word belongs to OneForAll.** A new OneForAll command can never take a plugin's.
+- **Each plugin gets one command**, named after its folder in lower case: a folder `MyBosses` gives `/ofa plugin_mybosses`. A leading `OneForAll_` is left out, so `OneForAll_MyBosses` gives `/ofa plugin_mybosses` too. Folder names are unique, so two plugins never share a command.
+- **The alias** (4th argument, optional) adds a short form: `"mb"` gives `/ofa plugin_mb`. The first plugin to ask for an alias keeps it. When it is taken, the plugin keeps only its full command. `RegisterSlashCommand` returns both commands (`"/ofa plugin_mybosses", "/ofa plugin_mb"`), the second being `nil` when there is no alias.
+- **Sub-commands** are yours: your function gets everything after the word, in lower case (`""` when nothing follows). For example `/ofa plugin_mb reset` gives `rest = "reset"`.
+- The command and its help line are shown on your plugin's page and by `/ofa plugins`.
+- `/ofa plugin_…` with a word no plugin has prints a short message instead of opening the window.
 
 ## 8. Callbacks and game events
 

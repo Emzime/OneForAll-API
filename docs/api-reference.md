@@ -80,7 +80,7 @@ What a view does:
 | Function | Returns | Since |
 |---|---|---|
 | `API.RegisterPlugin(name, info)` | `true`, or `false` when the name is taken or invalid. `info = { title = "My Plugin", version = "1.0.0" }`. Call it first: options, settings and content need a registered plugin. | 1 |
-| `API.GetPlugins()` | The registered plugins, sorted by name: a plain list of `{ name, title, version }`. | 1 |
+| `API.GetPlugins()` | The registered plugins, sorted by name: a plain list of `{ name, title, version, command, alias }`. | 1 |
 | `API.GetInstalledPlugins()` | Every addon with `## Dependencies: OneForAll`, loaded or not: a plain list of `{ name, title, version, notes, author, loaded, enabled }`. | 1 |
 
 ---
@@ -219,7 +219,9 @@ The section builder `s`:
 
 | Function | Returns | Since |
 |---|---|---|
-| `API.RegisterSlashCommand(word, fn, help)` | `true`, or `false` when `word` is taken. `/ofa <word> [rest]` calls `fn(rest)`, with `rest` `""` when nothing follows. OneForAll's own commands come first. | 1 |
+| `API.RegisterSlashCommand(name, fn, help[, alias])` | The plugin's command, `"/ofa plugin_<folder name>"` (in lower case, a leading `OneForAll_` left out), and the alias's, `"/ofa plugin_<alias>"` (or `nil` when not given or already taken). Returns `false` when the plugin isn't registered or already has a command. `/ofa plugin_<…> [rest]` calls `fn(rest)`, with `rest` in lower case, `""` when nothing follows. `help` is shown by `/ofa plugins` and on the plugin's page. | 1 |
+
+Every `/ofa plugin_…` word belongs to the plugins, every other `/ofa` word to OneForAll. `API.GetPlugins()` includes each plugin's `command` and `alias`.
 
 ---
 
