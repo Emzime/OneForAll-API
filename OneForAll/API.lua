@@ -26,7 +26,7 @@ local ADDON, FLT = ...
 --   * Name your own saved variables after your plugin, so they never meet OneForAll's.
 --   * Register settings and slash commands while your addon loads (before the player opens the window).
 --
--- Proposed for OneForAll 6.2.12; first user: the Dungeon Tracker plugin (OneForAll_DungeonTracker).
+-- Proposed for OneForAll 6.2.13; first user: the Dungeon Tracker plugin (OneForAll_DungeonTracker).
 
 local api = { VERSION = 1 }
 local plugins = {}            -- [name] = { name, version, title }

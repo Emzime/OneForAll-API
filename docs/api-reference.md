@@ -11,7 +11,7 @@ if not (API and API.VERSION >= 1) then return end
 
 | `VERSION` | OneForAll | Added |
 |---|---|---|
-| 1 | 6.2.12 | The first API. |
+| 1 | 6.2.13 | The first API. |
 
 A function never changes once published. Anything new comes as a new function in a higher version.
 
@@ -65,7 +65,7 @@ What a view does:
 | Function | Returns | Since |
 |---|---|---|
 | `API.VERSION` | The API's version (number). | 1 |
-| `API.GetVersion()` | OneForAll's version from its `.toc`, e.g. `"6.2.12-api1"`. | 1 |
+| `API.GetVersion()` | OneForAll's version from its `.toc`, e.g. `"6.2.13-api1"`. | 1 |
 | `API.GetLanguage()` | The language chosen in OneForAll: `"enUS"`, `"deDE"`, `"frFR"`, `"esES"` or `"ptBR"`. Changing it reloads the interface. | 1 |
 | `API.Translate(text)` | OneForAll's translation of an English text, or the text itself. | 1 |
 | `API.Name(englishName)` | A boss, NPC, item, quest or zone name in the chosen language when OneForAll knows it, else the English name. | 1 |

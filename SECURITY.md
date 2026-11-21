@@ -6,7 +6,7 @@ Only the latest release gets fixes. A fix comes as a new build (`-api2`, `-api3`
 
 | Version | Supported |
 |---|---|
-| Latest release (`6.2.12-api1`) | ✅ |
+| Latest release (`6.2.13-api1`) | ✅ |
 | Earlier releases | ❌ |
 
 ## What counts as a security issue here
