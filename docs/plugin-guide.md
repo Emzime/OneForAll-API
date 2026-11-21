@@ -67,7 +67,7 @@ MyPlugin.lua
 ```lua
 local NAME = "MyPlugin"
 local API = OneForAllAPI
-if not (API and API.VERSION >= 2) then return end
+if not (API and API.VERSION >= 1) then return end
 
 API.RegisterPlugin(NAME, { title = "My Plugin", version = "1.0.0" })
 ```

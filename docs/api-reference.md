@@ -4,15 +4,14 @@
 
 ```lua
 local API = OneForAllAPI
-if not (API and API.VERSION >= 2) then return end
+if not (API and API.VERSION >= 1) then return end
 ```
 
 **Since** is the first `API.VERSION` with the function. Ask for the highest *Since* among the functions you use.
 
 | `VERSION` | OneForAll | Added |
 |---|---|---|
-| 2 | 6.2.11-api1 | The first published API. |
-| 3 | 6.2.12-api1 | `GetQuestInfo`, `IsQuestForMe`, `IsRaidOpen`. Opening a page now uses OneForAll's step-by-step window build. |
+| 1 | 6.2.12 | The first API. |
 
 A function never changes once published. Anything new comes as a new function in a higher version.
 
@@ -44,13 +43,13 @@ A function never changes once published. Anything new comes as a new function in
 
 | Function | Returns | Since |
 |---|---|---|
-| `API.Data` | A view of every OneForAll data table, by name in capitals: `Data.DUNGEONS`, `Data.SETS`, `Data.BOOKS`, `Data.PROFESSION_RECIPES`… | 2 |
-| `API.DataKeys()` | A sorted plain list of the names in `API.Data`. | 2 |
-| `API.pairs(t)` | Like `pairs`, for views and plain tables. | 2 |
-| `API.ipairs(t)` | Like `ipairs`, for views and plain tables. | 2 |
-| `API.Count(t)` | Like `#t`, for views and plain tables. | 2 |
-| `API.IsReadOnly(t)` | `true` for a view. | 2 |
-| `API.Copy(t)` | A plain, writable deep copy, yours to change. Functions and frames are left out. | 2 |
+| `API.Data` | A view of every OneForAll data table, by name in capitals: `Data.DUNGEONS`, `Data.SETS`, `Data.BOOKS`, `Data.PROFESSION_RECIPES`… | 1 |
+| `API.DataKeys()` | A sorted plain list of the names in `API.Data`. | 1 |
+| `API.pairs(t)` | Like `pairs`, for views and plain tables. | 1 |
+| `API.ipairs(t)` | Like `ipairs`, for views and plain tables. | 1 |
+| `API.Count(t)` | Like `#t`, for views and plain tables. | 1 |
+| `API.IsReadOnly(t)` | `true` for a view. | 1 |
+| `API.Copy(t)` | A plain, writable deep copy, yours to change. Functions and frames are left out. | 1 |
 
 What a view does:
 - **Reading** works as usual, and tables inside come out as views too.
@@ -65,14 +64,14 @@ What a view does:
 
 | Function | Returns | Since |
 |---|---|---|
-| `API.VERSION` | The API's version (number). | 2 |
-| `API.GetVersion()` | OneForAll's version from its `.toc`, e.g. `"6.2.12-api2"`. | 2 |
-| `API.GetLanguage()` | The language chosen in OneForAll: `"enUS"`, `"deDE"`, `"frFR"`, `"esES"` or `"ptBR"`. Changing it reloads the interface. | 2 |
-| `API.Translate(text)` | OneForAll's translation of an English text, or the text itself. | 2 |
-| `API.Name(englishName)` | A boss, NPC, item, quest or zone name in the chosen language when OneForAll knows it, else the English name. | 2 |
-| `API.Print(text)` | Prints a line in the chat with OneForAll's prefix. | 2 |
-| `API.IsSecret(...)` | `true` when one of the values is a "secret" the client hides in combat. Such a value can't be compared or shown. | 2 |
-| `API.SafeCall(tag, fn, ...)` | Runs `fn(...)`. An error goes to OneForAll's error list (`/ofa errors`) under `tag`, not to a Lua popup. Returns `true` when `fn` ran without error. | 2 |
+| `API.VERSION` | The API's version (number). | 1 |
+| `API.GetVersion()` | OneForAll's version from its `.toc`, e.g. `"6.2.12-api3"`. | 1 |
+| `API.GetLanguage()` | The language chosen in OneForAll: `"enUS"`, `"deDE"`, `"frFR"`, `"esES"` or `"ptBR"`. Changing it reloads the interface. | 1 |
+| `API.Translate(text)` | OneForAll's translation of an English text, or the text itself. | 1 |
+| `API.Name(englishName)` | A boss, NPC, item, quest or zone name in the chosen language when OneForAll knows it, else the English name. | 1 |
+| `API.Print(text)` | Prints a line in the chat with OneForAll's prefix. | 1 |
+| `API.IsSecret(...)` | `true` when one of the values is a "secret" the client hides in combat. Such a value can't be compared or shown. | 1 |
+| `API.SafeCall(tag, fn, ...)` | Runs `fn(...)`. An error goes to OneForAll's error list (`/ofa errors`) under `tag`, not to a Lua popup. Returns `true` when `fn` ran without error. | 1 |
 
 ---
 
@@ -80,9 +79,9 @@ What a view does:
 
 | Function | Returns | Since |
 |---|---|---|
-| `API.RegisterPlugin(name, info)` | `true`, or `false` when the name is taken or invalid. `info = { title = "My Plugin", version = "1.0.0" }`. Call it first: options, settings and content need a registered plugin. | 2 |
-| `API.GetPlugins()` | The registered plugins, sorted by name: a plain list of `{ name, title, version }`. | 2 |
-| `API.GetInstalledPlugins()` | Every addon with `## Dependencies: OneForAll`, loaded or not: a plain list of `{ name, title, version, notes, author, loaded, enabled }`. | 2 |
+| `API.RegisterPlugin(name, info)` | `true`, or `false` when the name is taken or invalid. `info = { title = "My Plugin", version = "1.0.0" }`. Call it first: options, settings and content need a registered plugin. | 1 |
+| `API.GetPlugins()` | The registered plugins, sorted by name: a plain list of `{ name, title, version }`. | 1 |
+| `API.GetInstalledPlugins()` | Every addon with `## Dependencies: OneForAll`, loaded or not: a plain list of `{ name, title, version, notes, author, loaded, enabled }`. | 1 |
 
 ---
 
@@ -92,13 +91,13 @@ Page keys: `"dungeons"`, `"professions"`, `"qol"`, `"talents"`, `"books"`, `"pet
 
 | Function | Returns | Since |
 |---|---|---|
-| `API.OpenTab(key)` | Opens the window on a page. With `nil`, opens it as it was. | 2 |
-| `API.ToggleWindow()` | Opens or closes the window. | 2 |
-| `API.IsWindowShown()` | `true` when the window is open. | 2 |
-| `API.GetActiveTab()` | The key of the page shown, or `nil`. | 2 |
-| `API.GetTabs()` | The pages in their order: a plain list of `{ key, label, shown }`. `label` is translated; `shown` is `false` when the player hid that tab. | 2 |
+| `API.OpenTab(key)` | Opens the window on a page. With `nil`, opens it as it was. | 1 |
+| `API.ToggleWindow()` | Opens or closes the window. | 1 |
+| `API.IsWindowShown()` | `true` when the window is open. | 1 |
+| `API.GetActiveTab()` | The key of the page shown, or `nil`. | 1 |
+| `API.GetTabs()` | The pages in their order: a plain list of `{ key, label, shown }`. `label` is translated; `shown` is `false` when the player hid that tab. | 1 |
 
-The first time the window or a page opens, OneForAll builds it over a few frames (since 3), so the page may appear a moment after the call.
+The first time the window or a page opens, OneForAll builds it over a few frames, so the page may appear a moment after the call.
 
 ---
 
@@ -120,14 +119,14 @@ A dungeon (view) has, among others:
 
 | Function | Returns | Since |
 |---|---|---|
-| `API.GetDungeons()` | A view of every dungeon and raid. | 2 |
-| `API.GetDungeon(name)` | The dungeon (view) by its English name, or `nil`. | 2 |
-| `API.GetDungeonsByInstanceID(id)` | A plain list of the dungeons (views) using an instance ID (`GetInstanceInfo`'s 8th value). Several where wings share an instance: Scarlet Monastery, Dire Maul, Blackrock Spire. | 2 |
-| `API.FindCurrentDungeon()` | `d, sure`: the dungeon the player is in (view), or `nil`. `sure` is `false` when OneForAll only guesses the wing. | 2 |
-| `API.DungeonName(name)` | A dungeon's name in the chosen language. | 2 |
-| `API.IsSummonedBoss(npcID)` | `true` for a boss that only appears when summoned. | 2 |
-| `API.OpenDungeon(d, bossName, mode, questID)` | Opens OneForAll on a dungeon (view or English name), on a boss when `bossName` (English) is given. `mode`: `"bosses"` (default), `"loot"` or `"quests"`. `questID` shows a quest (with `"quests"`). Returns `true` when the dungeon exists. | 2 |
-| `API.IsRaidOpen(d)` | `false` while a raid isn't open on the server yet (Onyxia's Lair, Hyjal Summit, Barrow Deeps), else `true`. `d`: a dungeon (view) or its English name. | 3 |
+| `API.GetDungeons()` | A view of every dungeon and raid. | 1 |
+| `API.GetDungeon(name)` | The dungeon (view) by its English name, or `nil`. | 1 |
+| `API.GetDungeonsByInstanceID(id)` | A plain list of the dungeons (views) using an instance ID (`GetInstanceInfo`'s 8th value). Several where wings share an instance: Scarlet Monastery, Dire Maul, Blackrock Spire. | 1 |
+| `API.FindCurrentDungeon()` | `d, sure`: the dungeon the player is in (view), or `nil`. `sure` is `false` when OneForAll only guesses the wing. | 1 |
+| `API.DungeonName(name)` | A dungeon's name in the chosen language. | 1 |
+| `API.IsSummonedBoss(npcID)` | `true` for a boss that only appears when summoned. | 1 |
+| `API.OpenDungeon(d, bossName, mode, questID)` | Opens OneForAll on a dungeon (view or English name), on a boss when `bossName` (English) is given. `mode`: `"bosses"` (default), `"loot"` or `"quests"`. `questID` shows a quest (with `"quests"`). Returns `true` when the dungeon exists. | 1 |
+| `API.IsRaidOpen(d)` | `false` while a raid isn't open on the server yet (Onyxia's Lair, Hyjal Summit, Barrow Deeps), else `true`. `d`: a dungeon (view) or its English name. | 1 |
 
 ---
 
@@ -135,13 +134,13 @@ A dungeon (view) has, among others:
 
 | Function | Returns | Since |
 |---|---|---|
-| `API.IsQuestDone(questID)` | `true` when this character completed it. | 2 |
-| `API.IsQuestGrey(questID[, level])` | `true` when it gives no more XP at the player's level, or at `level`. | 2 |
-| `API.GetQuestInfo(questID)` | A view `{ id, name, lvl, req, side, cls, races, giver, loc = { mapID, x, y }, ... }`, or `nil`. | 3 |
-| `API.IsQuestForMe(questID)` | `true` when the quest is for the player's faction, class and race. | 3 |
-| `API.GetQuestStart(questID)` | Where it starts: a view `{ mapID, x, y, ... }`, or `nil`. | 2 |
-| `API.GetQuestEnd(questID)` | Where it is turned in, same format. | 2 |
-| `API.ShowQuestStartOnMap(quest)` | Puts a quest's start on the world map. `quest`: from `API.Data`, or `{ id = questID }`. | 2 |
+| `API.IsQuestDone(questID)` | `true` when this character completed it. | 1 |
+| `API.IsQuestGrey(questID[, level])` | `true` when it gives no more XP at the player's level, or at `level`. | 1 |
+| `API.GetQuestInfo(questID)` | A view `{ id, name, lvl, req, side, cls, races, giver, loc = { mapID, x, y }, ... }`, or `nil`. | 1 |
+| `API.IsQuestForMe(questID)` | `true` when the quest is for the player's faction, class and race. | 1 |
+| `API.GetQuestStart(questID)` | Where it starts: a view `{ mapID, x, y, ... }`, or `nil`. | 1 |
+| `API.GetQuestEnd(questID)` | Where it is turned in, same format. | 1 |
+| `API.ShowQuestStartOnMap(quest)` | Puts a quest's start on the world map. `quest`: from `API.Data`, or `{ id = questID }`. | 1 |
 
 ---
 
@@ -149,11 +148,11 @@ A dungeon (view) has, among others:
 
 | Function | Returns | Since |
 |---|---|---|
-| `API.FindBookByQuestID(questID)` | The book (view) a quest belongs to, or `nil`. | 2 |
-| `API.GetBookState(book)` | For this character: `"done"`, `"manual"`, `"bag"`, `"bank"`, `"questflag"` or `"missing"`. | 2 |
-| `API.GetBookCounts()` | `turnedIn, owned`. `owned` counts books turned in plus those in the bags or bank. | 2 |
-| `API.ShowBook(book)` | Opens the Library Books page on a book. | 2 |
-| `API.ShowBookOnMap(book)` | Puts a book on the world map. | 2 |
+| `API.FindBookByQuestID(questID)` | The book (view) a quest belongs to, or `nil`. | 1 |
+| `API.GetBookState(book)` | For this character: `"done"`, `"manual"`, `"bag"`, `"bank"`, `"questflag"` or `"missing"`. | 1 |
+| `API.GetBookCounts()` | `turnedIn, owned`. `owned` counts books turned in plus those in the bags or bank. | 1 |
+| `API.ShowBook(book)` | Opens the Library Books page on a book. | 1 |
+| `API.ShowBookOnMap(book)` | Puts a book on the world map. | 1 |
 
 ---
 
@@ -161,10 +160,10 @@ A dungeon (view) has, among others:
 
 | Function | Returns | Since |
 |---|---|---|
-| `API.GetItemStorageState(itemID)` | Where an item is for this character, as OneForAll last saw it: `"bag"`, `"bank"`, `"missing"` or `"unknown"`. | 2 |
-| `API.GetRecipeFullName(recipe)` | A recipe's full name (`"Recipe: ..."`). `recipe` comes from `API.Data.PROFESSION_RECIPES` and similar tables. | 2 |
-| `API.GetRecipeItemLink(recipe)` | The recipe's item link. | 2 |
-| `API.FindMapID(zone)` | A zone's map ID from its English name, or `nil`. | 2 |
+| `API.GetItemStorageState(itemID)` | Where an item is for this character, as OneForAll last saw it: `"bag"`, `"bank"`, `"missing"` or `"unknown"`. | 1 |
+| `API.GetRecipeFullName(recipe)` | A recipe's full name (`"Recipe: ..."`). `recipe` comes from `API.Data.PROFESSION_RECIPES` and similar tables. | 1 |
+| `API.GetRecipeItemLink(recipe)` | The recipe's item link. | 1 |
+| `API.FindMapID(zone)` | A zone's map ID from its English name, or `nil`. | 1 |
 
 ---
 
@@ -174,9 +173,9 @@ Read only, as it is now: read it again when you need it.
 
 | Function | Returns | Since |
 |---|---|---|
-| `API.GetCharacterKey()` | This character's key in OneForAll's data (the player's GUID). | 2 |
-| `API.GetCharacterData()` | A view of what OneForAll saved for this character. | 2 |
-| `API.GetAccountData()` | A view of what OneForAll saved for the account. | 2 |
+| `API.GetCharacterKey()` | This character's key in OneForAll's data (the player's GUID). | 1 |
+| `API.GetCharacterData()` | A view of what OneForAll saved for this character. | 1 |
+| `API.GetAccountData()` | A view of what OneForAll saved for the account. | 1 |
 
 ---
 
@@ -184,12 +183,12 @@ Read only, as it is now: read it again when you need it.
 
 | Function | Returns | Since |
 |---|---|---|
-| `API.GetOption(key)` | One of OneForAll's options; a table comes out as a view. | 2 |
-| `API.OnOptionChanged(key, fn)` | Calls `fn(value)` after one of OneForAll's options changed. | 2 |
-| `API.NewOptions(name, defaults)` | The plugin's own options object, or `nil` when the plugin isn't registered or already has one. `defaults` holds simple values (boolean, number, string). | 2 |
-| `opts:Get(key)` | The value, or its default. | 2 |
-| `opts:Set(key, value)` | Stores it. Tables are allowed, functions aren't. Returns `true` when stored. | 2 |
-| `opts:OnChanged(key, fn)` | Calls `fn(value)` after it changed. | 2 |
+| `API.GetOption(key)` | One of OneForAll's options; a table comes out as a view. | 1 |
+| `API.OnOptionChanged(key, fn)` | Calls `fn(value)` after one of OneForAll's options changed. | 1 |
+| `API.NewOptions(name, defaults)` | The plugin's own options object, or `nil` when the plugin isn't registered or already has one. `defaults` holds simple values (boolean, number, string). | 1 |
+| `opts:Get(key)` | The value, or its default. | 1 |
+| `opts:Set(key, value)` | Stores it. Tables are allowed, functions aren't. Returns `true` when stored. | 1 |
+| `opts:OnChanged(key, fn)` | Calls `fn(value)` after it changed. | 1 |
 
 A plugin's options are saved in OneForAll's profile as `plugin.<name>.<key>`. They follow the profile and are exported and imported with it.
 
@@ -199,8 +198,8 @@ A plugin's options are saved in OneForAll's profile as `plugin.<name>.<key>`. Th
 
 | Function | Returns | Since |
 |---|---|---|
-| `API.AddSettingsSection(name, def)` | `true` when added. `def = { title, icon, build = function(s) ... end }`. Several sections stack in the order added. | 2 |
-| `API.AddPluginContent(name, def)` | `true` when added. `def = { title, icon, height, build = function(frame, width) ... end }`. `height` is 20 to 2000 (default 120). | 2 |
+| `API.AddSettingsSection(name, def)` | `true` when added. `def = { title, icon, build = function(s) ... end }`. Several sections stack in the order added. | 1 |
+| `API.AddPluginContent(name, def)` | `true` when added. `def = { title, icon, height, build = function(frame, width) ... end }`. `height` is 20 to 2000 (default 120). | 1 |
 
 The section builder `s`:
 
@@ -220,7 +219,7 @@ The section builder `s`:
 
 | Function | Returns | Since |
 |---|---|---|
-| `API.RegisterSlashCommand(word, fn, help)` | `true`, or `false` when `word` is taken. `/ofa <word> [rest]` calls `fn(rest)`, with `rest` `""` when nothing follows. OneForAll's own commands come first. | 2 |
+| `API.RegisterSlashCommand(word, fn, help)` | `true`, or `false` when `word` is taken. `/ofa <word> [rest]` calls `fn(rest)`, with `rest` `""` when nothing follows. OneForAll's own commands come first. | 1 |
 
 ---
 
@@ -228,8 +227,8 @@ The section builder `s`:
 
 | Function | Returns | Since |
 |---|---|---|
-| `API.RegisterCallback(event, fn)` | `true`, or `false` for an unknown event. | 2 |
-| `API.UnregisterCallback(event, fn)` | `true` when `fn` was registered for `event`. | 2 |
+| `API.RegisterCallback(event, fn)` | `true`, or `false` for an unknown event. | 1 |
+| `API.UnregisterCallback(event, fn)` | `true` when `fn` was registered for `event`. | 1 |
 
 | Event | Arguments | When |
 |---|---|---|
@@ -249,10 +248,10 @@ OneForAll's look, on frames of your own: `API.Widgets.<name>`.
 
 | Function | What it does | Since |
 |---|---|---|
-| `FramedPanel(frame)` | OneForAll's dark background with the gold frame. | 2 |
-| `CloseButton(parent, onClick)` | The square X button. Returns it. | 2 |
-| `GoldButton(parent, text[, width, height])` | A gold button (default 120 × 24). Returns it. | 2 |
-| `Confirm(text, onYes)` | A Yes / No question. `onYes()` runs on Yes. | 2 |
-| `FontString(parent[, layer, template])` | A font string in OneForAll's font. | 2 |
-| `SetTexture(texture, path, ...)` | Sets a texture, from the game or from an addon. | 2 |
-| `SkinColor(r, g, b)` | The color adapted to the skin chosen in OneForAll: returns `r, g, b`. | 2 |
+| `FramedPanel(frame)` | OneForAll's dark background with the gold frame. | 1 |
+| `CloseButton(parent, onClick)` | The square X button. Returns it. | 1 |
+| `GoldButton(parent, text[, width, height])` | A gold button (default 120 × 24). Returns it. | 1 |
+| `Confirm(text, onYes)` | A Yes / No question. `onYes()` runs on Yes. | 1 |
+| `FontString(parent[, layer, template])` | A font string in OneForAll's font. | 1 |
+| `SetTexture(texture, path, ...)` | Sets a texture, from the game or from an addon. | 1 |
+| `SkinColor(r, g, b)` | The color adapted to the skin chosen in OneForAll: returns `r, g, b`. | 1 |

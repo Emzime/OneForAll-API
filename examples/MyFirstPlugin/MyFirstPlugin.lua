@@ -5,7 +5,7 @@ local NAME = "MyFirstPlugin" -- the addon's folder name: the plugin's name every
 
 -- 1. The API: present, and new enough for what this file uses ------------------------------------------------------
 local API = OneForAllAPI
-if not (API and API.VERSION >= 2) then return end -- OneForAll without the plugin API: the plugin stays quiet
+if not (API and API.VERSION >= 1) then return end -- OneForAll without the plugin API: the plugin stays quiet
 
 API.RegisterPlugin(NAME, { title = "My First Plugin", version = "1.0.0" })
 
