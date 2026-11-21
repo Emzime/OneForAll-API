@@ -1,6 +1,6 @@
 # OneForAll – Plugin API
 
-An **unofficial** build of [OneForAll](https://discord.gg/JSPUqw4g), the all-in-one WoW Forever companion by **Smoergi**, with a **plugin API** (`OneForAllAPI`) and a **Plugins** page.
+An **unofficial** build of [OneForAll](https://github.com/smoergi/OneForAll_Forever), the all-in-one WoW Forever companion by **Smoergi**, with a **plugin API** (`OneForAllAPI`) and a **Plugins** page.
 
 Plugins are separate addons. They can read everything OneForAll knows and add their own options and commands, without ever being able to change OneForAll. OneForAll and its plugins can each be updated on their own, and OneForAll works exactly the same without any plugin.
 
@@ -146,5 +146,5 @@ For a new build, raise the suffix in `OneForAll/OneForAll.toc` (`## Version: 6.2
 
 ## Credits & license
 
-- **OneForAll** © Smoergi, licensed under **GPL-3.0-or-later** (see `OneForAll/LICENSE.txt` and `OneForAll/THIRD_PARTY_LICENSES.txt`). This modified version is under the same license. The changes are listed above.
+- **[OneForAll](https://github.com/smoergi/OneForAll_Forever)** © Smoergi, licensed under **GPL-3.0-or-later** (see `OneForAll/LICENSE.txt` and `OneForAll/THIRD_PARTY_LICENSES.txt`). This modified version is under the same license. The changes are listed above.
 - Official OneForAll, support and suggestions: **https://discord.gg/JSPUqw4g**
