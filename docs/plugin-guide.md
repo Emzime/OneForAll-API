@@ -15,7 +15,7 @@ A step-by-step guide, from an empty folder to a published plugin. Every function
 9. [Opening OneForAll on a page](#9-opening-oneforall-on-a-page)
 10. [Texts and languages](#10-texts-and-languages)
 11. [Saved data](#11-saved-data)
-12. [Your own windows](#12-your-own-windows)
+12. [What your plugin shows](#12-what-your-plugin-shows)
 13. [Testing and debugging](#13-testing-and-debugging)
 14. [Publishing](#14-publishing)
 15. [Checklist](#15-checklist)
@@ -269,21 +269,80 @@ local function db()
 end
 ```
 
-## 12. Your own windows
+## 12. What your plugin shows
 
-A plugin can create any frame, as in any addon. To make it look like OneForAll:
+**The rule: build everything visible with `API.Widgets`.** Then your plugin takes the look the player uses: OneForAll's by default, or that of an interface plugin (an ElvUI-style interface) that offers its own. Its windows also join the move mode. A plugin that draws its frames itself keeps its own style, and doesn't follow the player's choice.
+
+`Window`, `CheckButton`, `ProgressBar`, `ScrollArea`, `TextColor`, the appearances and the move mode need `API.VERSION >= 2`.
+
+```lua
+local win = API.Widgets.Window(NAME, "main", { title = "My Plugin", width = 260, height = 120 })
+-- win.Title, win.Close, win.Content; it joins the move mode under "main", its place kept in the profile
+
+local bar = API.Widgets.ProgressBar(win.Content, 240, 14)
+bar:SetPoint("TOPLEFT", 0, -4)
+bar:SetProgress(3, 10); bar:SetLabel("3 / 10")
+
+local cb = API.Widgets.CheckButton(win.Content, "Show in combat", function(checked) opts:Set("combat", checked) end)
+cb:SetPoint("TOPLEFT", 0, -28)
+
+local text = API.Widgets.FontString(win.Content, "OVERLAY", "GameFontHighlight")
+text:SetPoint("TOPLEFT", 0, -60); text:SetTextColor(API.Widgets.TextColor(1, 1, 1))
+```
 
 | Widget | Use |
 |---|---|
-| `API.Widgets.FramedPanel(frame)` | OneForAll's dark background with the gold frame. |
-| `API.Widgets.CloseButton(parent, onClick)` | The square X button. |
-| `API.Widgets.GoldButton(parent, text, width, height)` | A gold button. |
-| `API.Widgets.Confirm(text, onYes)` | A Yes / No question. |
-| `API.Widgets.FontString(parent, layer, template)` | A text in OneForAll's font. |
-| `API.Widgets.SetTexture(texture, path, ...)` | Sets a texture, from the game or from an addon. |
-| `API.Widgets.SkinColor(r, g, b)` | A color adapted to the skin chosen in OneForAll. |
+| `Window(name, key, opts)` | A whole window, movable by the player. |
+| `FramedPanel(frame)` | The look's panel on a frame of your own. |
+| `CloseButton(parent, onClick)`, `GoldButton(parent, text, width, height)` | Buttons. |
+| `CheckButton(parent, label, onClick)` | A check box with its label. |
+| `ProgressBar(parent, width, height)` | A progress bar. |
+| `ScrollArea(parent)` | A scroll area scrolled with the mouse wheel. |
+| `FontString(parent, layer, template)` | A text in the look's font. |
+| `SkinColor(r, g, b)`, `TextColor(r, g, b)` | An accent colour and a text colour in the look. |
+| `Confirm(text, onYes)` | A Yes / No question. |
 
-Give your frames names that start with your plugin's name (`MyPluginFrame`), so they never meet OneForAll's.
+**When the look changes** (the player picks other colours in OneForAll or in the interface plugin), the widgets you made are recoloured for you. Recolour what you coloured yourself in the `APPEARANCE_CHANGED` callback:
+
+```lua
+API.RegisterCallback("APPEARANCE_CHANGED", function()
+  text:SetTextColor(API.Widgets.TextColor(1, 1, 1))
+end)
+```
+
+**Frames of your own in the move mode:** `API.RegisterMovable(NAME, "bar", myFrame)`, after placing it. `Window` does it for you.
+
+Give the frames you name yourself a name that starts with your plugin's name (`MyPluginFrame`), so they never meet OneForAll's.
+
+### Writing an interface plugin (an appearance)
+
+An interface plugin can give every plugin its look:
+
+```lua
+API.RegisterAppearance(NAME, {
+  title = "My UI",
+  widgets = {
+    -- same arguments and results as API.Widgets'; leave out what keeps OneForAll's look
+    Window = function(name, key, opts)
+      local win = API.Widgets.Default.Window(name, key, opts) -- start from OneForAll's, then restyle it
+      MyUI.SkinFrame(win)
+      return win
+    end,
+    GoldButton = function(parent, text, width, height) return MyUI.Button(parent, text, width, height) end,
+  },
+  Restyle = function(kind, object) MyUI.Recolour(kind, object) end, -- a widget already on screen, new colours
+})
+
+-- the player picked another colour in your interface:
+API.AppearanceChanged(NAME)
+
+-- your own "move frames" button:
+API.SetMoveMode(not API.IsMoveMode())
+```
+
+- The player chooses on your plugin's page whether plugins use your look (*Use this look for all plugins*). Once installed, yours is used unless they chose OneForAll's. The choice applies after a reload.
+- An error in one of your widget functions draws that widget with OneForAll's look instead, and the error goes to `/ofa errors`.
+- Your look applies to what plugins build with `API.Widgets`, never to OneForAll's own window.
 
 ## 13. Testing and debugging
 
@@ -299,8 +358,8 @@ Give your frames names that start with your plugin's name (`MyPluginFrame`), so 
 - Zip **the plugin's folder** (not its contents): the player puts it into `Interface/AddOns`.
 - Say clearly that it needs **OneForAll with the plugin API**, with a link to it.
 - Give the version in the `.toc`. Players see it on the Plugins page.
-- On GitHub, a workflow can build the zip and attach it to a release on each tag. The [Dungeon Tracker](https://github.com/Emzime/OneForAll-Plugin-DungeonTracker) repository has one (`.github/workflows/build.yml`) that you can copy.
-- Licence: OneForAll is under GPL-3.0-or-later. Using the same licence for a plugin (as the Dungeon Tracker does) is the simplest choice. It is required for any part of OneForAll's code you copy into your plugin, rather than calling the API.
+- On GitHub, a workflow can build the zip and attach it to a release on each tag. This repository's `.github/workflows/build.yml` is a starting point you can adapt.
+- Licence: OneForAll is under GPL-3.0-or-later. Using the same licence for a plugin is the simplest choice. It is required for any part of OneForAll's code you copy into your plugin, rather than calling the API.
 
 ## 15. Checklist
 
@@ -310,6 +369,7 @@ Give your frames names that start with your plugin's name (`MyPluginFrame`), so 
 - [ ] `API.ipairs` / `API.pairs` / `API.Count` on what the API returns
 - [ ] Nothing written into OneForAll's tables (use `API.Copy` for a copy of your own)
 - [ ] Options through `NewOptions`, saved data named after the plugin
+- [ ] Everything visible built with `API.Widgets` (windows with `Widgets.Window`, so they join the move mode)
 - [ ] English names for comparisons, `DungeonName` / `Name` for display
 - [ ] Tested in another language, turned off, after `/reload`
 - [ ] The zip holds the plugin's folder, and the README links to OneForAll with the API

@@ -11,7 +11,8 @@ if not (API and API.VERSION >= 1) then return end
 
 | `VERSION` | OneForAll | Added |
 |---|---|---|
-| 1 | 6.2.13 | The first API. |
+| 1 | 6.2.12 | The first API: data, options, Plugins page, commands, callbacks, basic widgets. |
+| 2 | 6.2.16 | Appearances (an interface plugin's look for every plugin), the move mode, and the widgets `Window`, `ProgressBar`, `CheckButton`, `ScrollArea`, `TextColor`, `Default`. Events `APPEARANCE_CHANGED`, `MOVE_MODE`. |
 
 A function never changes once published. Anything new comes as a new function in a higher version.
 
@@ -36,6 +37,8 @@ A function never changes once published. Anything new comes as a new function in
 - [Slash commands](#slash-commands)
 - [Callbacks](#callbacks)
 - [Widgets](#widgets)
+- [Appearances](#appearances)
+- [Move mode](#move-mode)
 
 ---
 
@@ -65,7 +68,7 @@ What a view does:
 | Function | Returns | Since |
 |---|---|---|
 | `API.VERSION` | The API's version (number). | 1 |
-| `API.GetVersion()` | OneForAll's version from its `.toc`, e.g. `"6.2.13-api1"`. | 1 |
+| `API.GetVersion()` | OneForAll's version from its `.toc`, e.g. `"6.2.16-api2"`. | 1 |
 | `API.GetLanguage()` | The language chosen in OneForAll: `"enUS"`, `"deDE"`, `"frFR"`, `"esES"` or `"ptBR"`. Changing it reloads the interface. | 1 |
 | `API.Translate(text)` | OneForAll's translation of an English text, or the text itself. | 1 |
 | `API.Name(englishName)` | A boss, NPC, item, quest or zone name in the chosen language when OneForAll knows it, else the English name. | 1 |
@@ -239,6 +242,8 @@ Every `/ofa plugin_…` word belongs to the plugins, every other `/ofa` word to 
 | `WINDOW_SHOWN` | – | OneForAll's window opened. |
 | `WINDOW_HIDDEN` | – | OneForAll's window closed. |
 | `DATA_REFRESHED` | – | OneForAll read the bags or bank again. |
+| `APPEARANCE_CHANGED` | `name` | The look in use changed: `"OneForAll"` (its window colours) or the interface plugin's name. Widgets made with `API.Widgets` are already recoloured; recolour what you drew yourself. (since 2) |
+| `MOVE_MODE` | `on` | The move mode was turned on (`true`) or off (`false`). (since 2) |
 
 Callbacks run through `SafeCall`: an error in one doesn't stop the others.
 
@@ -246,14 +251,53 @@ Callbacks run through `SafeCall`: an error in one doesn't stop the others.
 
 ## Widgets
 
-OneForAll's look, on frames of your own: `API.Widgets.<name>`.
+What a plugin shows: `API.Widgets.<name>`. They draw with the look in use: OneForAll's, or that of the interface plugin the player uses (see [Appearances](#appearances)). **Build everything visible with them**, so a plugin looks like the rest of the player's interface. A plugin that draws its frames itself keeps its own style.
 
 | Function | What it does | Since |
 |---|---|---|
-| `FramedPanel(frame)` | OneForAll's dark background with the gold frame. | 1 |
+| `Window(name, key, opts)` | A whole window: panel, title (`win.Title`), close button (`win.Close`), content area (`win.Content`). `opts = { title, width, height, point = { "CENTER", ... }, strata, close = false, movable = false }`. It joins the [move mode](#move-mode) under `key` (unless `movable = false`), with its place kept in the profile. Returns the frame, hidden or shown as you choose. | 2 |
+| `FramedPanel(frame[, inset])` | The look's panel (background and frame line) on a frame of your own. Returns the background texture, or `nil`. | 1 |
 | `CloseButton(parent, onClick)` | The square X button. Returns it. | 1 |
-| `GoldButton(parent, text[, width, height])` | A gold button (default 120 × 24). Returns it. | 1 |
+| `GoldButton(parent, text[, width, height])` | A button (default 120 × 24). Returns it. | 1 |
+| `CheckButton(parent, label, onClick)` | A check box with its label (`cb.Label`). `onClick(checked)` when clicked. Returns it. | 2 |
+| `ProgressBar(parent[, width, height])` | A progress bar (default 200 × 14): `bar:SetProgress(value, max)`, `bar:SetLabel(text)`, `bar:SetBarColor(r, g, b)`. Returns it. | 2 |
+| `ScrollArea(parent)` | A scroll area without a visible bar; the mouse wheel scrolls it. Returns the scroll frame and its content frame (set the content's size). | 2 |
 | `Confirm(text, onYes)` | A Yes / No question. `onYes()` runs on Yes. | 1 |
-| `FontString(parent[, layer, template])` | A font string in OneForAll's font. | 1 |
+| `FontString(parent[, layer, template])` | A text in the look's font. | 1 |
 | `SetTexture(texture, path, ...)` | Sets a texture, from the game or from an addon. | 1 |
-| `SkinColor(r, g, b)` | The color adapted to the skin chosen in OneForAll: returns `r, g, b`. | 1 |
+| `SkinColor(r, g, b)` | An accent colour in the look: returns `r, g, b`. | 1 |
+| `TextColor(r, g, b)` | A text colour in the look (OneForAll's follows the text colour chosen in its settings): returns `r, g, b`. | 2 |
+| `Default` | The same widgets, always with OneForAll's look (e.g. for an appearance that only changes a few). | 2 |
+
+---
+
+## Appearances
+
+An interface plugin (a whole game interface) can draw every plugin's widgets with its own look.
+
+| Function | Returns | Since |
+|---|---|---|
+| `API.RegisterAppearance(name, def)` | `true` when added (once per plugin; the plugin must be registered). `def = { title, widgets = { Window = fn, GoldButton = fn, ... }, Restyle = function(kind, object) }`. | 2 |
+| `API.GetAppearance()` | `name, title` of the look in use: `"OneForAll", "OneForAll"`, or the interface plugin's. | 2 |
+| `API.AppearanceChanged(name)` | Called by the interface plugin in use when its look changed (e.g. the player picked another colour): `Restyle` runs on every widget made so far, then `APPEARANCE_CHANGED` fires. `false` when `name` isn't the look in use. | 2 |
+
+- **`widgets`:** any of the [widget](#widgets) functions, with the same arguments and results. Those it leaves out are drawn with OneForAll's look. A function that raises an error, or returns nothing, falls back to OneForAll's look too, and the error goes to `/ofa errors`.
+- **`Restyle(kind, object)`:** recolours a widget already on screen. `kind` is the widget's name (`"Window"`, `"GoldButton"`…), and `object` is what that widget returned (for `FramedPanel`, the frame passed in).
+- **The player chooses:** a plugin that offers a look gets an **Appearance** section on its page on the Plugins page: *Use this look for all plugins*. A newly installed one is used unless the player chose OneForAll's look. The choice is saved in the profile and applies after a reload.
+- An appearance changes only what plugins build with `API.Widgets`. It never changes OneForAll's own window.
+
+---
+
+## Move mode
+
+The player moves the plugins' frames, and their places are kept in OneForAll's profile.
+
+| Function | Returns | Since |
+|---|---|---|
+| `API.RegisterMovable(name, key, frame[, opts])` | `true` when added. Call it after placing the frame: a place saved earlier is applied at once. `key` is unique within the plugin. `opts = { label }`: the text shown on the frame in move mode (default: the plugin's title and the key). `Widgets.Window` does it for you. | 2 |
+| `API.SetMoveMode(on)` | Turns the move mode on or off. `false` in combat. | 2 |
+| `API.IsMoveMode()` | `true` while it is on. | 2 |
+
+- **For the player:** the **Move frames** button on the Plugins page, or `/ofa plugins move`. Each frame shows a coloured overlay with its label: drag it to move it, right-click to put it back where the plugin placed it. A small bar with a **Done** button ends the mode.
+- **While it is on,** hidden frames are shown so they can be placed, then hidden again.
+- Places are saved as `pluginpos.<name>.<key>` in the profile: they follow the profile and its export.

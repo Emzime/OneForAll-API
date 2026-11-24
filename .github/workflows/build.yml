@@ -1,6 +1,6 @@
 # Builds OneForAll-<version>.zip (the OneForAll/ folder, with the plugin API), ready to drop into Interface/AddOns.
 # - Every push and pull request: the zip is uploaded as a workflow artifact.
-# - A pushed tag starting with "v" (e.g. v6.2.13-api1): the zip is also attached to a GitHub release.
+# - A pushed tag starting with "v" (e.g. v6.2.16-api2): the zip is also attached to a GitHub release.
 name: Build
 
 on:

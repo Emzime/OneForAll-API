@@ -18,6 +18,9 @@ local ADDON, FLT = ...
 --   * Its part of the Plugins page, slash commands, callbacks: a plugin adds its own; it can't replace or remove
 --     anything.
 --   * OneForAllAPI itself is read only: a plugin can't replace a function another plugin or OneForAll relies on.
+--   * What a plugin shows: through API.Widgets (windows, buttons, bars, texts...). They take OneForAll's look, or the
+--     look of an interface plugin that offers one (API.RegisterAppearance); their windows join the move mode, with
+--     their places kept in the profile. A plugin that draws its frames itself keeps its own style.
 -- (In WoW all addons share one Lua space, so nothing stops an addon that edits OneForAll's saved variables or frames on
 --  its own. What this API guarantees is that it never hands out a way to change OneForAll.)
 --
@@ -26,9 +29,10 @@ local ADDON, FLT = ...
 --   * Name your own saved variables after your plugin, so they never meet OneForAll's.
 --   * Register settings and slash commands while your addon loads (before the player opens the window).
 --
--- Proposed for OneForAll 6.2.13; first user: the Dungeon Tracker plugin (OneForAll_DungeonTracker).
+-- Proposed for OneForAll 6.2.16. VERSION 1: data, options, Plugins page, commands, callbacks; VERSION 2: appearances,
+-- move mode, Window / ProgressBar / CheckButton / ScrollArea / TextColor widgets.
 
-local api = { VERSION = 1 }
+local api = { VERSION = 2 }
 local plugins = {}            -- [name] = { name, version, title }
 local callbacks = {}          -- [event] = { fn, ... }
 local pluginSettings = {}     -- [plugin name] = { section defs, in order }: the Plugins page
@@ -186,7 +190,8 @@ end
 --   "TAB_SHOWN" (key)               a page of the window was shown ("dungeons", "professions", "plugins"...)
 --   "WINDOW_SHOWN" / "WINDOW_HIDDEN" OneForAll's window opened / closed
 --   "DATA_REFRESHED"                OneForAll read the bags / bank again (book and item states may have changed)
-local EVENTS = { OPTION_CHANGED = true, TAB_SHOWN = true, WINDOW_SHOWN = true, WINDOW_HIDDEN = true, DATA_REFRESHED = true }
+local EVENTS = { OPTION_CHANGED = true, TAB_SHOWN = true, WINDOW_SHOWN = true, WINDOW_HIDDEN = true, DATA_REFRESHED = true,
+  APPEARANCE_CHANGED = true, MOVE_MODE = true }
 function api.RegisterCallback(event, fn)
   if not EVENTS[event] or type(fn) ~= "function" then return false end
   callbacks[event] = callbacks[event] or {}
@@ -474,28 +479,329 @@ function FLT.PluginSlashUnknown(word)
   api.Print(string.format(api.Translate("No plugin answers to /ofa %s. /ofa plugins lists the plugins' commands."), word))
 end
 
--- Widgets: OneForAll's look, on frames of your own -------------------------------------------------------------------
-local W = {}
-api.Widgets = W
--- OneForAll's dark panel with the gold frame
-function W.FramedPanel(frame) if FLT.UI and FLT.UI.FramedPanel then return FLT.UI.FramedPanel(frame) end end
--- the square close button (X); onClick() when clicked
-function W.CloseButton(parent, onClick) if FLT.UI and FLT.UI.CloseButton then return FLT.UI.CloseButton(parent, onClick) end end
--- a gold button
-function W.GoldButton(parent, text, width, height)
-  if FLT.UI and FLT.UI.GoldButton then return FLT.UI.GoldButton(parent, text, width or 120, height or 24, nil, 12) end
+-- Widgets: what plugins show on screen ---------------------------------------------------------------------------
+-- API.Widgets draws every window, button, bar and text a plugin shows. By default with OneForAll's look; when the
+-- player uses an interface plugin that offers its own look (an "appearance", API.RegisterAppearance), with that one.
+-- So a plugin that builds everything visible through API.Widgets always looks like the rest of the player's
+-- interface; one that draws its frames itself keeps its own style.
+local UIW = FLT.UI or {}
+local function skinC(r, g, b, a) if FLT.SkinC then return FLT.SkinC(r, g, b, a) end return r, g, b, a end
+local function textC(r, g, b, a) if FLT.TextC then return FLT.TextC(r, g, b, a) end return skinC(r, g, b, a) end
+
+-- a scroll area without a visible bar: the mouse wheel scrolls it (both columns of the Plugins page)
+local function wheelScroll(parent)
+  local sf = CreateFrame("ScrollFrame", nil, parent)
+  local child = CreateFrame("Frame", nil, sf)
+  child:SetSize(10, 10)
+  sf:SetScrollChild(child)
+  sf:EnableMouseWheel(true)
+  sf:SetScript("OnMouseWheel", function(self, delta)
+    local range = self:GetVerticalScrollRange() or 0
+    local y = (self:GetVerticalScroll() or 0) - (tonumber(delta) or 0) * 40
+    self:SetVerticalScroll(math.max(0, math.min(range, y)))
+  end)
+  -- back inside the range when the content got shorter
+  sf:SetScript("OnScrollRangeChanged", function(self, _, yrange)
+    local range = tonumber(yrange) or self:GetVerticalScrollRange() or 0
+    if (self:GetVerticalScroll() or 0) > range then self:SetVerticalScroll(math.max(0, range)) end
+  end)
+  return sf, child
+end
+
+-- the default look: OneForAll's ----------------------------------------------------------------------------------
+local D = {}
+-- OneForAll's dark panel with its thin frame line; returns the background texture (or nil)
+function D.FramedPanel(frame, inset) if UIW.FramedPanel then return UIW.FramedPanel(frame, inset) end end
+-- the square close button (X); onClick() when clicked (default: hides the parent)
+function D.CloseButton(parent, onClick) if UIW.CloseButton then return UIW.CloseButton(parent, onClick) end end
+-- a button
+function D.GoldButton(parent, text, width, height)
+  if UIW.GoldButton then return UIW.GoldButton(parent, text, width or 120, height or 24, nil, 12) end
 end
 -- a Yes / No question; onYes() on Yes
-function W.Confirm(text, onYes) if FLT.UI and FLT.UI.Confirm then FLT.UI.Confirm(text, onYes) else onYes() end end
--- a font string in OneForAll's font
-function W.FontString(parent, layer, template)
+function D.Confirm(text, onYes) if UIW.Confirm then UIW.Confirm(text, onYes) else onYes() end end
+-- a font string in OneForAll's font (it follows the text colour chosen in OneForAll's settings)
+function D.FontString(parent, layer, template)
   if FLT.NewFS then return FLT.NewFS(parent, nil, layer or "OVERLAY", template or "GameFontNormal") end
   return parent:CreateFontString(nil, layer or "OVERLAY", template or "GameFontNormal")
 end
--- sets a texture by path (works with the game's own and with addon files)
-function W.SetTexture(tex, path, ...) if FLT.SetTex then return FLT.SetTex(tex, path, ...) end return tex:SetTexture(path, ...) end
--- a color in the chosen skin (r, g, b in, r, g, b out)
-function W.SkinColor(r, g, b) if FLT.SkinC then return FLT.SkinC(r, g, b) end return r, g, b end
+-- sets a texture by path (the game's own files and addon files)
+function D.SetTexture(tex, path, ...) if FLT.SetTex then return FLT.SetTex(tex, path, ...) end return tex:SetTexture(path, ...) end
+-- an accent colour in the current look (r, g, b in, r, g, b out)
+function D.SkinColor(r, g, b) return skinC(r, g, b) end
+-- a text colour in the current look (r, g, b in, r, g, b out)
+function D.TextColor(r, g, b) return textC(r, g, b) end
+-- a check box with its label; onClick(checked) when clicked. cb.Label is the label.
+function D.CheckButton(parent, label, onClick)
+  local cb = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
+  if FLT.SkinBlizz then FLT.SkinBlizz(cb) end
+  cb:SetSize(24, 24)
+  cb.Label = D.FontString(cb, "OVERLAY", "GameFontHighlight")
+  cb.Label:SetPoint("LEFT", cb, "RIGHT", 4, 0); cb.Label:SetText(label or "")
+  cb:SetScript("OnClick", function(self) if onClick then safe("Plugin check button", onClick, self:GetChecked() and true or false) end end)
+  return cb
+end
+-- a progress bar: bar:SetProgress(value, max), bar:SetLabel(text), bar:SetBarColor(r, g, b)
+function D.ProgressBar(parent, width, height)
+  local bar = CreateFrame("StatusBar", nil, parent)
+  bar:SetSize(width or 200, height or 14)
+  bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+  bar:SetStatusBarColor(skinC(0.90, 0.66, 0.22))
+  bar:SetMinMaxValues(0, 1); bar:SetValue(0)
+  local bg = bar:CreateTexture(nil, "BACKGROUND"); bg:SetAllPoints()
+  if UIW.SetBGColor then UIW.SetBGColor(bg, 0.055, 0.047, 0.038, 0.9) else bg:SetColorTexture(0.055, 0.047, 0.038, 0.9) end
+  if UIW.MarkBG then UIW.MarkBG(bg, "base") end
+  bar.Background = bg
+  -- a thin line around it, as OneForAll's frames
+  local function edge(p1, p2, horiz)
+    local t = bar:CreateTexture(nil, "OVERLAY"); t:SetColorTexture(skinC(0.50, 0.42, 0.30, 0.85))
+    t:SetPoint(p1); t:SetPoint(p2)
+    if horiz then t:SetHeight(1) else t:SetWidth(1) end
+    return t
+  end
+  bar.Edges = { edge("TOPLEFT", "TOPRIGHT", true), edge("BOTTOMLEFT", "BOTTOMRIGHT", true),
+    edge("TOPLEFT", "BOTTOMLEFT"), edge("TOPRIGHT", "BOTTOMRIGHT") }
+  bar.Label = D.FontString(bar, "OVERLAY", "GameFontHighlightSmall"); bar.Label:SetPoint("CENTER")
+  function bar:SetProgress(value, max)
+    max = tonumber(max) or 1; if max <= 0 then max = 1 end
+    self:SetMinMaxValues(0, max); self:SetValue(math.max(0, math.min(max, tonumber(value) or 0)))
+  end
+  function bar:SetLabel(text) self.Label:SetText(text or "") end
+  function bar:SetBarColor(r, g, b) self:SetStatusBarColor(r, g, b) end
+  return bar
+end
+-- a scroll area without a visible bar (the mouse wheel scrolls it): returns the scroll frame and its content frame
+function D.ScrollArea(parent) return wheelScroll(parent) end
+-- a whole window: frame with its panel, title (win.Title), close button (win.Close, unless opts.close == false) and
+-- content area (win.Content). opts = { title, width, height, point = { "CENTER", ... }, strata, close }
+function D.Window(name, key, opts)
+  opts = type(opts) == "table" and opts or {}
+  local f = CreateFrame("Frame", nil, UIParent)
+  f:SetSize(tonumber(opts.width) or 300, tonumber(opts.height) or 200)
+  f:SetPoint(unpack(type(opts.point) == "table" and opts.point or { "CENTER" }))
+  f:SetFrameStrata(opts.strata or "MEDIUM"); f:SetClampedToScreen(true); f:EnableMouse(true)
+  f.Background = D.FramedPanel(f)
+  f.Title = D.FontString(f, "OVERLAY", "GameFontNormal")
+  f.Title:SetPoint("TOPLEFT", 12, -10); f.Title:SetPoint("RIGHT", -36, 0); f.Title:SetJustifyH("LEFT")
+  f.Title:SetText(opts.title or ""); f.Title:SetTextColor(textC(1, 0.82, 0))
+  if opts.close ~= false then
+    f.Close = D.CloseButton(f, function() f:Hide() end)
+    if f.Close then f.Close:SetPoint("TOPRIGHT", -6, -6) end
+  end
+  f.Content = CreateFrame("Frame", nil, f)
+  f.Content:SetPoint("TOPLEFT", 10, -32); f.Content:SetPoint("BOTTOMRIGHT", -10, 10)
+  return f
+end
+
+-- appearances: an interface plugin can draw API.Widgets with its own look ----------------------------------------
+local appearances, appearanceOrder = {}, {}
+local APPEARANCE_KEY = "pluginapi.appearance" -- the player's choice, in OneForAll's profile: a plugin's name, or "OneForAll"
+local sessionAppearance                       -- the look of this session (a change applies after a reload)
+local function appearanceChoice()
+  local v = FLT.QoL and FLT.QoL.Get and FLT.QoL.Get(APPEARANCE_KEY)
+  if v == "OneForAll" then return "OneForAll" end
+  if type(v) == "string" and appearances[v] then return v end
+  return appearanceOrder[1] or "OneForAll" -- an installed interface plugin is used unless the player turned it off
+end
+local function activeAppearance()
+  if sessionAppearance then return sessionAppearance end
+  local name = appearanceChoice()
+  -- fixed for the session once the player is in the game (all plugins have loaded by then)
+  if IsLoggedIn and IsLoggedIn() then sessionAppearance = name end
+  return name
+end
+local function provider() local n = activeAppearance(); return n ~= "OneForAll" and appearances[n] or nil end
+
+-- the widgets made so far (to restyle them when the look changes): object -> kind
+local made = setmetatable({}, { __mode = "k" })
+local NO_RESULT = { FramedPanel = true, Confirm = true, SetTexture = true } -- may return nothing
+local TRACK_ARG = { FramedPanel = true }                                    -- the frame passed in is what changes
+local NOT_TRACKED = { Confirm = true, SetTexture = true, SkinColor = true, TextColor = true }
+
+local W = {}
+api.Widgets = W
+W.Default = D -- OneForAll's own look, also for an appearance that only changes a few widgets
+
+local function widget(kind)
+  return function(...)
+    local prov = provider()
+    local f = prov and prov.widgets[kind]
+    local res
+    if f then
+      res = { pcall(f, ...) }
+      if not res[1] then
+        local err = res[2]
+        safe("Appearance " .. prov.name .. " (" .. kind .. ")", function() error(err, 0) end)
+        res = nil -- the default look instead
+      elseif res[2] == nil and not NO_RESULT[kind] then
+        res = nil
+      end
+    end
+    if not res then res = { true, D[kind](...) } end
+    if not NOT_TRACKED[kind] then
+      local obj = TRACK_ARG[kind] and (...) or res[2]
+      if type(obj) == "table" then made[obj] = kind end
+    end
+    return unpack(res, 2, table.maxn(res))
+  end
+end
+for _, kind in ipairs({ "FramedPanel", "CloseButton", "GoldButton", "Confirm", "FontString", "SetTexture", "SkinColor",
+  "TextColor", "CheckButton", "ProgressBar", "ScrollArea", "Window" }) do
+  W[kind] = widget(kind)
+end
+
+-- An interface plugin offers its look: def = { title = "My UI", widgets = { Window = fn, GoldButton = fn, ... },
+-- Restyle = function(kind, object) }. Each widget function has the same arguments and results as API.Widgets'; one it
+-- doesn't give is drawn with OneForAll's look (API.Widgets.Default). Restyle(kind, object) recolours a widget already
+-- made, when the look changes (API.AppearanceChanged). The player chooses on the plugin's page whether plugins use it;
+-- a newly installed one is used unless the player chose OneForAll's look. The choice applies after a reload.
+function api.RegisterAppearance(name, def)
+  if type(name) ~= "string" or not plugins[name] or appearances[name] or type(def) ~= "table" then return false end
+  local widgets = {}
+  if type(def.widgets) == "table" then
+    for kind, fn in pairs(def.widgets) do if D[kind] and type(fn) == "function" then widgets[kind] = fn end end
+  end
+  appearances[name] = { name = name, title = type(def.title) == "string" and def.title or plugins[name].title,
+    widgets = widgets, restyle = type(def.Restyle) == "function" and def.Restyle or nil }
+  appearanceOrder[#appearanceOrder + 1] = name
+  return true
+end
+-- the look in use: its name ("OneForAll" or the interface plugin's name) and title
+function api.GetAppearance()
+  local n = activeAppearance()
+  if n == "OneForAll" then return "OneForAll", "OneForAll" end
+  return n, appearances[n].title
+end
+-- every widget made with API.Widgets is restyled, then APPEARANCE_CHANGED tells the plugins
+local function restyleAll(name)
+  local prov = name ~= "OneForAll" and appearances[name] or nil
+  if prov and prov.restyle then
+    for obj, kind in pairs(made) do safe("Appearance " .. name .. " (Restyle)", prov.restyle, kind, obj) end
+  end
+  fire("APPEARANCE_CHANGED", name)
+end
+-- the interface plugin in use tells that its look changed (e.g. the player picked another colour)
+function api.AppearanceChanged(name)
+  if type(name) ~= "string" or name ~= activeAppearance() then return false end
+  restyleAll(name)
+  return true
+end
+-- OneForAll's own look changed (its window colours, Settings > Window): the plugins using it are told too
+if UIW.ApplyWindowColors then
+  local apply = UIW.ApplyWindowColors
+  UIW.ApplyWindowColors = function(...)
+    local r = apply(...)
+    if activeAppearance() == "OneForAll" then restyleAll("OneForAll") end
+    return r
+  end
+end
+
+-- Move mode: the plugins' frames, moved by the player, their places kept in the profile -----------------------------
+local movables = {} -- in the order registered: { name, key, frame, default = { points }, overlay }
+local moveMode, moveBar = false, nil
+local function posKey(m) return "pluginpos." .. m.name .. "." .. m.key end
+local function ratio(f) local s = UIParent:GetEffectiveScale(); return (f:GetEffectiveScale() or s) / (s ~= 0 and s or 1) end
+local function savePos(m)
+  local f = m.frame
+  local left, top = f:GetLeft(), f:GetTop()
+  if not (left and top) then return end
+  local k = ratio(f)
+  if FLT.QoL and FLT.QoL.Set then FLT.QoL.Set(posKey(m), { left * k, top * k }) end
+end
+local function placeSaved(m)
+  local p = FLT.QoL and FLT.QoL.Get and FLT.QoL.Get(posKey(m))
+  if type(p) ~= "table" or not (tonumber(p[1]) and tonumber(p[2])) then return false end
+  local k = ratio(m.frame)
+  m.frame:ClearAllPoints()
+  m.frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", p[1] / k, p[2] / k)
+  return true
+end
+local function placeDefault(m)
+  m.frame:ClearAllPoints()
+  for _, pt in ipairs(m.default) do m.frame:SetPoint(unpack(pt)) end
+  if #m.default == 0 then m.frame:SetPoint("CENTER") end
+end
+local function overlay(m)
+  if m.overlay then return m.overlay end
+  local o = CreateFrame("Frame", nil, m.frame)
+  o:SetAllPoints(); o:SetFrameLevel((m.frame:GetFrameLevel() or 1) + 50); o:EnableMouse(true)
+  local t = o:CreateTexture(nil, "OVERLAY"); t:SetAllPoints(); t:SetColorTexture(skinC(0.90, 0.66, 0.22, 0.30))
+  local fs = D.FontString(o, "OVERLAY", "GameFontHighlight"); fs:SetPoint("CENTER"); fs:SetText(m.label)
+  o:RegisterForDrag("LeftButton")
+  o:SetScript("OnDragStart", function() m.frame:SetMovable(true); m.frame:StartMoving() end)
+  o:SetScript("OnDragStop", function() m.frame:StopMovingOrSizing(); savePos(m) end)
+  o:SetScript("OnMouseUp", function(_, button)
+    if button == "RightButton" then
+      if FLT.QoL and FLT.QoL.Set then FLT.QoL.Set(posKey(m), nil) end
+      placeDefault(m)
+    end
+  end)
+  o:Hide()
+  m.overlay = o
+  return o
+end
+local function showMoveBar(on)
+  if on and not moveBar then
+    moveBar = CreateFrame("Frame", nil, UIParent)
+    moveBar:SetSize(440, 62); moveBar:SetPoint("TOP", 0, -120); moveBar:SetFrameStrata("DIALOG")
+    D.FramedPanel(moveBar)
+    local fs = D.FontString(moveBar, "OVERLAY", "GameFontHighlight")
+    fs:SetPoint("TOPLEFT", 14, -12); fs:SetPoint("RIGHT", -110, 0); fs:SetJustifyH("LEFT")
+    fs:SetText(api.Translate("Move mode: drag the plugins' frames. Right-click one to put it back."))
+    local done = D.GoldButton(moveBar, api.Translate("Done"), 84, 24)
+    if done then done:SetPoint("RIGHT", -12, 0); done:SetScript("OnClick", function() api.SetMoveMode(false) end) end
+  end
+  if moveBar then moveBar:SetShown(on) end
+end
+-- A plugin's frame joins the move mode: the player drags it there, and its place is kept in the profile (right-click
+-- puts it back where the plugin placed it). Register after placing the frame; a saved place is applied at once.
+-- opts = { label = "shown on it in move mode" }. Returns true.
+function api.RegisterMovable(name, key, frame, opts)
+  if type(name) ~= "string" or not plugins[name] or type(key) ~= "string" or key == "" then return false end
+  if type(frame) ~= "table" or not frame.GetPoint then return false end
+  for _, m in ipairs(movables) do if m.name == name and m.key == key then return false end end
+  local m = { name = name, key = key, frame = frame, default = {} }
+  for i = 1, (frame.GetNumPoints and frame:GetNumPoints() or 0) do m.default[i] = { frame:GetPoint(i) } end
+  m.label = (type(opts) == "table" and type(opts.label) == "string" and opts.label) or (plugins[name].title .. " - " .. key)
+  frame:SetClampedToScreen(true)
+  movables[#movables + 1] = m
+  placeSaved(m)
+  if moveMode then m.wasShown = frame:IsShown(); frame:Show(); overlay(m):Show() end
+  return true
+end
+-- the move mode on or off (in combat it waits: frames can't be shown or hidden then)
+function api.SetMoveMode(on)
+  on = on and true or false
+  if on == moveMode then return true end
+  if InCombatLockdown and InCombatLockdown() then return false end
+  moveMode = on
+  for _, m in ipairs(movables) do
+    if on then
+      m.wasShown = m.frame:IsShown(); m.frame:Show(); overlay(m):Show()
+    else
+      if m.overlay then m.overlay:Hide() end
+      if m.wasShown == false then m.frame:Hide() end
+      m.wasShown = nil
+    end
+  end
+  showMoveBar(on)
+  fire("MOVE_MODE", on)
+  return true
+end
+function api.IsMoveMode() return moveMode end
+local function hasMovables() return #movables > 0 end
+
+-- the window wrapper: a whole window joins the move mode (unless opts.movable == false)
+do
+  local window = W.Window
+  W.Window = function(name, key, opts)
+    local f = window(name, key, opts)
+    if f and not (type(opts) == "table" and opts.movable == false) then
+      api.RegisterMovable(name, key, f, type(opts) == "table" and opts.title and { label = opts.title } or nil)
+    end
+    return f
+  end
+end
 
 -- Where the callbacks come from (OneForAll's own functions, watched from here) -----------------------------------------
 -- an option changed: after QoL.Set (OneForAll's own handler for it runs as before)
@@ -600,32 +906,22 @@ local function setEnabled(name, on)
 end
 
 local SEC_W = 488 -- the narrowest a section gets; it takes the whole width of the page's right side
--- a scroll area without a visible bar: the mouse wheel scrolls it (both columns of the Plugins page)
-local function wheelScroll(parent)
-  local sf = CreateFrame("ScrollFrame", nil, parent)
-  local child = CreateFrame("Frame", nil, sf)
-  child:SetSize(10, 10)
-  sf:SetScrollChild(child)
-  sf:EnableMouseWheel(true)
-  sf:SetScript("OnMouseWheel", function(self, delta)
-    local range = self:GetVerticalScrollRange() or 0
-    local y = (self:GetVerticalScroll() or 0) - (tonumber(delta) or 0) * 40
-    self:SetVerticalScroll(math.max(0, math.min(range, y)))
-  end)
-  -- back inside the range when the content got shorter
-  sf:SetScript("OnScrollRangeChanged", function(self, _, yrange)
-    local range = tonumber(yrange) or self:GetVerticalScrollRange() or 0
-    if (self:GetVerticalScroll() or 0) > range then self:SetVerticalScroll(math.max(0, range)) end
-  end)
-  return sf, child
-end
-
 local function createPluginsPanel(parent)
   local UI = FLT.UI
   local panel = CreateFrame("Frame", nil, parent)
   UI.PlacePanel(panel, parent)
   UI.TitleBand(panel, { emblem = UI.ASSET_ROOT .. "emblem_settings", art = UI.ASSET_ROOT .. "settings_banner",
     title = L["Plugins"], subtitle = L["Addons that plug into OneForAll. Their options are saved in the profile this character uses."], fadeRight = 200 })
+
+  -- the move mode, for the plugins' frames that joined it (top right; shown only when there are some)
+  local moveBtn = UI.GoldButton(panel, L["Move frames"], 150, 24, nil, 12)
+  moveBtn:SetPoint("TOPRIGHT", -14, -26)
+  moveBtn:SetScript("OnClick", function() api.SetMoveMode(not api.IsMoveMode()) end)
+  moveBtn:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_BOTTOM"); GameTooltip:SetText(L["Move frames"])
+    GameTooltip:AddLine(L["Moves the plugins' windows. Their places are saved in the profile."], 1, 1, 1, true); GameTooltip:Show()
+  end)
+  moveBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
   -- left: the list
   local listBox = CreateFrame("Frame", nil, panel)
@@ -731,6 +1027,24 @@ local function createPluginsPanel(parent)
     reload:SetShown(p.wanted ~= nil and p.wanted ~= p.loaded)
     head:nextRow()
     head:finish()
+    -- an interface plugin that offers its look: the player chooses whether the plugins use it (after a reload)
+    if p.loaded and appearances[p.name] then
+      local s = section(page, state, L["Appearance"], "Interface\\Icons\\INV_Misc_Paint_01")
+      local apReload
+      local apRow = s.y
+      s:check(L["Use this look for all plugins"],
+        L["The plugins' windows, buttons, bars and texts made through the API take this plugin's look. The change applies after a reload."],
+        function() return appearanceChoice() == p.name end,
+        function(v)
+          if FLT.QoL and FLT.QoL.Set then FLT.QoL.Set(APPEARANCE_KEY, v and p.name or "OneForAll") end
+          if apReload then apReload:SetShown(appearanceChoice() ~= activeAppearance()) end
+        end, 0, false, W - 200)
+      apReload = UI.GoldButton(s.box, L["Reload"], 120, 24, nil, 12)
+      apReload:SetPoint("TOPRIGHT", s.box, "TOPRIGHT", -14, apRow - 2)
+      apReload:SetScript("OnClick", function() if ReloadUI then ReloadUI() end end)
+      apReload:SetShown(appearanceChoice() ~= activeAppearance())
+      s:nextRow(); s:finish()
+    end
     if p.loaded then
       local defs = pluginSettings[p.name] or {}
       if #defs == 0 then
@@ -776,6 +1090,7 @@ local function createPluginsPanel(parent)
     for _, p in ipairs(list) do for _, old in ipairs(current) do if old.name == p.name then p.wanted = old.wanted end end end
     current = list
     empty:SetShown(#list == 0)
+    moveBtn:SetShown(hasMovables())
     for i, p in ipairs(list) do
       local r = rows[i]
       if not r then
@@ -827,7 +1142,8 @@ end
 OneForAllAPI = lock(api)
 
 -- /ofa plugins: the plugins that registered, with their command (OneForAll's own word, not a plugin's)
-FLT.PluginSlash.plugins = { fn = function()
+FLT.PluginSlash.plugins = { fn = function(rest)
+  if rest == "move" then api.SetMoveMode(not moveMode) return end -- /ofa plugins move: the move mode on or off
   local list = api.GetPlugins()
   if #list == 0 then api.Print(api.Translate("No plugins.")) return end
   for _, p in ipairs(list) do

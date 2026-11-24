@@ -8,9 +8,9 @@ Plugins are separate addons. They can read everything OneForAll knows and add th
 
 | Folder | What it is | Version |
 |---|---|---|
-| `OneForAll/` | OneForAll **6.2.13** + the plugin API | `6.2.13-api1` |
+| `OneForAll/` | OneForAll **6.2.16** + the plugin API (version 2) | `6.2.16-api2` |
 
-The `-api1` suffix marks a test build for OneForAll's version check: it never tells other players about a "newer version", and you are still told when the official 6.2.14 / 6.3.0 comes out. Screenshots were taken in game with a French client.
+The version reads `<OneForAll version>-api<API version>[.<fix>]`: `6.2.16-api2` is OneForAll 6.2.16 with the plugin API version 2, and a fix to that build becomes `6.2.16-api2.1`. The suffix also marks a test build for OneForAll's version check: it never tells other players about a "newer version", and you are still told when the official 6.2.17 / 6.3.0 comes out. Screenshots were taken in game with a French client.
 
 ## Documentation
 
@@ -25,7 +25,7 @@ The `-api1` suffix marks a test build for OneForAll's version check: it never te
 
 | Plugin | What it does |
 |---|---|
-| [Dungeon Tracker](https://github.com/Emzime/OneForAll-Plugin-DungeonTracker) | Killed bosses, time, XP and gold while you're in a dungeon or raid. |
+| [Dungeon Tracker](https://github.com/Emzime/OneForAll-Plugin-DungeonTracker) | Killed bosses, time, XP and gold while you're in a dungeon or raid. Built into OneForAll since 6.2.14 (its own run tracker): not needed with this version. |
 
 ---
 
@@ -37,12 +37,12 @@ Very little, so it's easy to take over in each new version:
 |---|---|
 | `API.lua` | **New.** The whole API (the global `OneForAllAPI`, thin wrappers over OneForAll's own functions) and the Plugins page. |
 | `UI/MainFrame.lua` | A page can have a button in the title bar instead of a tab (`noTab`): the tab bar is already full in French or German. The Plugins page uses it. |
-| `OneForAll.toc` | Loads `API.lua` last. Version `6.2.13-api1`. |
+| `OneForAll.toc` | Loads `API.lua` last. Version `6.2.16-api2`. |
 | `Core.lua` | `/ofa plugin_<name>` hands a plugin its command (5 lines before the `else` that opens the window). Every other `/ofa` word stays OneForAll's. |
 | `UI/Settings.lua` | Not for the API: the fix for long labels (see below). |
-| `Locales/{deDE,frFR,esES,ptBR}.lua` | The texts of the Plugins page (11). |
+| `Locales/{deDE,frFR,esES,ptBR}.lua` | The texts of the Plugins page and of the move mode. |
 
-Everything else is OneForAll 6.2.13 as released.
+Everything else is OneForAll 6.2.16 as released.
 
 ## The Plugins page
 
@@ -67,6 +67,16 @@ A plugin is a separate addon. Its `.toc` says `## Dependencies: OneForAll`, so i
 - **Nothing writable.** Every table the API hands out is read only, and writing into one raises an error. A plugin can't change OneForAll's data, saved data, options or functions, nor replace a function of `OneForAllAPI`. Only OneForAll's existing functions, exposed by name, can be called; data tables never carry functions out.
 - **Its own space.** A plugin writes only its own options (`API.NewOptions`), stored in OneForAll's profile under `plugin.<name>.<key>`, a name OneForAll never uses. It gets its part of the Plugins page and can add `/ofa` commands and callbacks, but never replace or remove OneForAll's or another plugin's.
 - **Stable.** `API.VERSION` goes up when something is added; what exists stays as it is, so plugins keep working.
+
+## What plugins show: one look for all
+
+Everything a plugin shows can go through `API.Widgets`: windows, buttons, check boxes, progress bars, scroll areas, texts. Built that way, it looks like the rest of the player's interface:
+
+- **By default**, `API.Widgets` draws with OneForAll's look, and follows its window and text colours (Settings > Window).
+- **An interface plugin** (a whole game interface, ElvUI-style) can offer its own look with `API.RegisterAppearance`. `API.Widgets` then draws every plugin's windows and buttons with that look. When the player changes its colours, `API.AppearanceChanged` recolours what is already on screen, and the `APPEARANCE_CHANGED` callback tells the plugins. The player chooses on that plugin's page whether plugins use its look.
+- **Move mode:** a window made with `API.Widgets.Window`, or any frame given to `API.RegisterMovable`, can be dragged by the player in the move mode: the **Move frames** button on the Plugins page, `/ofa plugins move`, or `API.SetMoveMode(true)` from an interface plugin. Its place is kept in OneForAll's profile, and a right-click puts it back.
+
+The rule for plugin authors is simple: **everything visible through `API.Widgets`**. A plugin that draws its frames itself keeps its own style.
 
 > In WoW, all addons share one Lua space, so nothing can stop an addon that edits OneForAll's saved variables or frames by itself. What the API guarantees is that it never hands out a way to change OneForAll.
 
@@ -96,7 +106,7 @@ end, "/ofa plugin_mp <dungeon>: the bosses of a dungeon", "mp")
 API.RegisterCallback("TAB_SHOWN", function(key) API.Print("Page: " .. key) end)
 ```
 
-## Reference (`OneForAllAPI`, version 1)
+## Reference (`OneForAllAPI`, version 2)
 
 | Area | Functions |
 |---|---|
@@ -112,10 +122,12 @@ API.RegisterCallback("TAB_SHOWN", function(key) API.Print("Page: " .. key) end)
 | **Options** | OneForAll's (read only): `GetOption(key)`, `OnOptionChanged(key, fn)`. The plugin's own: `NewOptions(name, defaults)` → `:Get(key)`, `:Set(key, value)`, `:OnChanged(key, fn)` |
 | **Plugins page** | `AddSettingsSection(name, { title, icon, build })`: a section of settings in the plugin's part of the page; `build(s)` uses `s:check`, `s:button`, `s:text`, `s:nextRow`, and `s.width` (the sections take the page's whole width). `AddPluginContent(name, { title, icon, height, build })`: a free block for anything else (a list, a summary…), `build(frame, width)` |
 | **Slash commands** | `RegisterSlashCommand(name, fn, help, alias)`: `/ofa plugin_<name> [rest]`, and `/ofa plugin_<alias> [rest]` |
-| **Callbacks** | `RegisterCallback(event, fn)`, `UnregisterCallback(event, fn)`. Events: `OPTION_CHANGED`, `TAB_SHOWN`, `WINDOW_SHOWN`, `WINDOW_HIDDEN`, `DATA_REFRESHED` |
-| **Widgets** | `Widgets.FramedPanel`, `CloseButton`, `GoldButton`, `Confirm`, `FontString`, `SetTexture`, `SkinColor` |
+| **Callbacks** | `RegisterCallback(event, fn)`, `UnregisterCallback(event, fn)`. Events: `OPTION_CHANGED`, `TAB_SHOWN`, `WINDOW_SHOWN`, `WINDOW_HIDDEN`, `DATA_REFRESHED`, `APPEARANCE_CHANGED`, `MOVE_MODE` |
+| **Widgets** | `Widgets.Window`, `FramedPanel`, `CloseButton`, `GoldButton`, `CheckButton`, `ProgressBar`, `ScrollArea`, `Confirm`, `FontString`, `SetTexture`, `SkinColor`, `TextColor`; `Widgets.Default` (OneForAll's own look) |
+| **Appearances** | `RegisterAppearance(name, { title, widgets, Restyle })`, `GetAppearance()`, `AppearanceChanged(name)` |
+| **Move mode** | `RegisterMovable(name, key, frame, opts)`, `SetMoveMode(on)`, `IsMoveMode()` |
 
-Every function is described in the [API reference](docs/api-reference.md) and in the comments of [`OneForAll/API.lua`](OneForAll/API.lua). Something a plugin needs and can't do yet becomes a new function in a later version (`VERSION` 2…), never a change to an existing one.
+Every function is described in the [API reference](docs/api-reference.md) and in the comments of [`OneForAll/API.lua`](OneForAll/API.lua). Something a plugin needs and can't do yet becomes a new function in a later version (`VERSION` 3…), never a change to an existing one.
 
 ---
 
@@ -140,9 +152,9 @@ In languages with long labels (French, German…), the switches in the *Dungeons
 
 `.github/workflows/build.yml` checks every Lua file and builds `OneForAll-<version>.zip`:
 - on every push and pull request, as a workflow artifact;
-- when a tag starting with `v` is pushed (e.g. `git tag v6.2.13-api1 && git push --tags`), also as a GitHub release.
+- when a tag starting with `v` is pushed (e.g. `git tag v6.2.16-api2 && git push --tags`), also as a GitHub release.
 
-For a new build, raise the suffix in `OneForAll/OneForAll.toc` (`## Version: 6.2.13-api2`) and tag it the same way (`v6.2.13-api2`). Keep tags in lower case: GitHub sorts releases by comparing tag names.
+For a new build, change the version in `OneForAll/OneForAll.toc` and tag it the same way: a fix gets `.1`, `.2`… (`6.2.16-api2.1`, tag `v6.2.16-api2.1`); a new API version changes the number after `api` (`6.2.16-api3`); a new OneForAll version keeps the API's (`6.2.17-api2`). Keep tags in lower case: GitHub sorts releases by comparing tag names.
 
 ## Credits & license
 

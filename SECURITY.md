@@ -2,11 +2,11 @@
 
 ## Supported versions
 
-Only the latest release gets fixes. A fix comes as a new build (`-api2`, `-api3`…) of the same OneForAll version, or as a build on the next OneForAll version.
+Only the latest release gets fixes. A fix comes as a new build of the same OneForAll and API version (`6.2.16-api2.1`, `-api2.2`…), or as a build on the next OneForAll version.
 
 | Version | Supported |
 |---|---|
-| Latest release (`6.2.13-api1`) | ✅ |
+| Latest release (`6.2.16-api2`) | ✅ |
 | Earlier releases | ❌ |
 
 ## What counts as a security issue here

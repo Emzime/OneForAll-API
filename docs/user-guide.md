@@ -45,6 +45,23 @@ Use the **Enabled** switch on its page, then the **Reload** button next to it: a
 
 A plugin that is off stays in the list, so you can turn it back on.
 
+## Moving the plugins' windows
+
+Plugins' windows can be moved: click **Move frames** at the top right of the Plugins page (or type `/ofa plugins move`).
+- Each window shows a coloured overlay with its name: drag it where you want it.
+- Right-click a window to put it back where the plugin placed it.
+- Click **Done** on the small bar at the top of the screen when you're finished.
+
+The places are saved in OneForAll's profile. The button is there only when a plugin has windows that can be moved.
+
+## A plugin that changes the look
+
+An interface plugin (a whole game interface) can give every plugin its look: windows, buttons, bars and texts made through the plugin API take its style and colours. Its page on the Plugins page has an **Appearance** section with the switch *Use this look for all plugins*:
+- on (the default once it's installed): plugins take its look;
+- off: plugins keep OneForAll's look.
+
+The change applies after a reload (**Reload** button next to the switch). OneForAll's own window keeps its look either way.
+
 ## Options and profiles
 
 A plugin's options are saved in **OneForAll's profile** for the character, next to OneForAll's own options:
@@ -56,6 +73,7 @@ A plugin's options are saved in **OneForAll's profile** for the character, next 
 | Command | What it does |
 |---|---|
 | `/ofa plugins` | Lists the plugins that are loaded, with their version and command. |
+| `/ofa plugins move` | Turns the move mode on or off. |
 | `/ofa errors` | OneForAll's error list, plugins' errors included. |
 | `/ofa plugin_<name>` | A plugin's command, if it has one: e.g. `/ofa plugin_dungeontracker`, or its short form `/ofa plugin_dt`. It is shown on the plugin's page. |
 
